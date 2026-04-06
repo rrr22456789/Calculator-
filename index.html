@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="theme-color" content="#dedad6" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+  <meta name="apple-mobile-web-app-title" content="Calc+" />
+  <link rel="manifest" href="manifest.json" />
+  <link rel="apple-touch-icon" href="icons/icon-192.png" />
+  <link rel="icon" type="image/svg+xml" href="icons/icon.svg" />
+  <title>Calc+</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Nunito:wght@900&display=swap');
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+    :root { --bg:#dedad6; --face:#e6e2de; --face-hi:#f0ede9; --face-lo:#cac6c2; --ink:#1e1e1e; --ink-dim:#9a9692; }
+    html,body { height:100%; background:var(--bg); }
+    #root { min-height:100vh; min-height:100dvh; display:flex; align-items:center; justify-content:center; background:var(--bg); }
+    .phone { width:min(390px,100vw); min-height:100vh; min-height:100dvh; background:var(--bg); display:flex; flex-direction:column; }
+    .disp { flex:1; display:flex; flex-direction:column; align-items:flex-end; justify-content:flex-end; padding:48px 28px 20px; gap:4px; }
+    .tape { font-family:'Courier New',monospace; font-size:13px; color:var(--ink-dim); min-height:20px; letter-spacing:0.03em; text-align:right; width:100%; }
+    .numbox { width:100%; display:flex; justify-content:flex-end; align-items:baseline; overflow:hidden; }
+    .num { font-family:'Nunito',sans-serif; font-weight:900; line-height:1; letter-spacing:-0.02em; text-align:right; white-space:nowrap; user-select:none; background:linear-gradient(160deg,#b0aca8 0%,#7a7672 40%,#4a4642 100%); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text; transition:font-size 0.15s ease; }
+    @keyframes pop { 0%{transform:scale(0.88);opacity:0.3} 65%{transform:scale(1.03)} 100%{transform:scale(1);opacity:1} }
+    .pop { animation:pop 0.22s cubic-bezier(0.34,1.56,0.64,1) both; }
+    .btn-area { padding:8px 14px 40px; display:flex; flex-direction:column; gap:10px; }
+    .top-row { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+    .mid-grid { display:grid; grid-template-columns:repeat(3,1fr) 1.6fr; grid-template-rows:repeat(3,1fr); gap:10px; }
+    .bot-row { display:grid; grid-template-columns:2fr 1fr; gap:10px; }
+    .btn { border:none; cursor:pointer; display:flex; align-items:center; justify-content:center; outline:none; user-select:none; border-radius:20px; position:relative; transition:box-shadow 70ms ease,transform 70ms ease,background 70ms ease; touch-action:manipulation; font-family:system-ui,-apple-system,sans-serif; }
+    .bn { height:90px; font-size:36px; font-weight:500; color:var(--ink); background:linear-gradient(155deg,var(--face-hi) 0%,var(--face) 50%,var(--face-lo) 100%); box-shadow:0 6px 0 #b0ada9,0 8px 16px rgba(0,0,0,.22),inset 0 1px 0 rgba(255,255,255,.85); }
+    .bn.down { transform:translateY(5px); background:linear-gradient(155deg,var(--face-lo) 0%,#d0ccc8 100%); box-shadow:0 1px 0 #b0ada9,0 2px 4px rgba(0,0,0,.18),inset 0 2px 6px rgba(0,0,0,.12); }
+    .bu { height:62px; font-size:22px; font-weight:500; color:var(--ink-dim); background:linear-gradient(155deg,var(--face-hi) 0%,var(--face) 50%,var(--face-lo) 100%); box-shadow:0 5px 0 #aaa6a2,0 7px 14px rgba(0,0,0,.2),inset 0 1px 0 rgba(255,255,255,.85); }
+    .bu.down { transform:translateY(4px); background:linear-gradient(155deg,var(--face-lo) 0%,#d0ccc8 100%); box-shadow:0 1px 0 #aaa6a2,0 2px 4px rgba(0,0,0,.14),inset 0 2px 5px rgba(0,0,0,.10); }
+    .bp { font-size:68px; font-weight:200; color:#fff; grid-column:4; grid-row:1/span 3; border-radius:24px; height:100%; min-height:290px; background:linear-gradient(160deg,#323232 0%,#181818 100%); box-shadow:0 7px 0 #0a0a0a,0 10px 24px rgba(0,0,0,.45),inset 0 1px 0 rgba(255,255,255,.12); letter-spacing:-0.04em; }
+    .bp.down { transform:translateY(6px); background:linear-gradient(160deg,#161616 0%,#222 100%); box-shadow:0 1px 0 #0a0a0a,0 3px 8px rgba(0,0,0,.4),inset 0 3px 10px rgba(0,0,0,.4); }
+    .bz { height:90px; font-size:36px; font-weight:500; color:var(--ink); justify-content:flex-start; padding-left:32px; background:linear-gradient(155deg,var(--face-hi) 0%,var(--face) 50%,var(--face-lo) 100%); box-shadow:0 6px 0 #b0ada9,0 8px 16px rgba(0,0,0,.22),inset 0 1px 0 rgba(255,255,255,.85); }
+    .bz.down { transform:translateY(5px); background:linear-gradient(155deg,var(--face-lo) 0%,#d0ccc8 100%); box-shadow:0 1px 0 #b0ada9,0 2px 4px rgba(0,0,0,.18),inset 0 2px 6px rgba(0,0,0,.12); }
+    .be { height:90px; font-size:32px; font-weight:400; color:#fff; letter-spacing:0.1em; background:linear-gradient(155deg,#484848 0%,#252525 100%); box-shadow:0 6px 0 #0e0e0e,0 9px 20px rgba(0,0,0,.38),inset 0 1px 0 rgba(255,255,255,.1); }
+    .be.down { transform:translateY(5px); background:linear-gradient(155deg,#1e1e1e 0%,#303030 100%); box-shadow:0 1px 0 #0e0e0e,0 2px 5px rgba(0,0,0,.32),inset 0 3px 8px rgba(0,0,0,.35); }
+  </style>
+</head>
+<body>
+<div id="root">
+  <div class="phone">
+    <div class="disp">
+      <div class="tape" id="tape">&nbsp;</div>
+      <div class="numbox">
+        <span class="num" id="display" style="font-size:112px">0</span>
+      </div>
+    </div>
+    <div class="btn-area">
+      <div class="top-row">
+        <button class="btn bu" data-key="C">C</button>
+        <button class="btn bu" data-key="back" style="font-size:28px">&#8592;</button>
+      </div>
+      <div class="mid-grid">
+        <button class="btn bn" data-key="7">7</button>
+        <button class="btn bn" data-key="8">8</button>
+        <button class="btn bn" data-key="9">9</button>
+        <button class="btn bp" data-key="+" style="grid-column:4;grid-row:1/span 3">+</button>
+        <button class="btn bn" data-key="4">4</button>
+        <button class="btn bn" data-key="5">5</button>
+        <button class="btn bn" data-key="6">6</button>
+        <button class="btn bn" data-key="1">1</button>
+        <button class="btn bn" data-key="2">2</button>
+        <button class="btn bn" data-key="3">3</button>
+      </div>
+      <div class="bot-row">
+        <button class="btn bz" data-key="0">0</button>
+        <button class="btn be" data-key="=">=</button>
+      </div>
+    </div>
+  </div>
+</div>
+<script>
+  var total=0,entry="",tape=[];
+  function beep(t){try{var c=new(window.AudioContext||window.webkitAudioContext)(),o=c.createOscillator(),g=c.createGain();o.connect(g);g.connect(c.destination);var f={num:400,plus:560,eq:640,c:220,del:320};o.type=t==="eq"?"triangle":"sine";o.frequency.value=f[t]||400;g.gain.setValueAtTime(0.06,c.currentTime);g.gain.exponentialRampToValueAtTime(0.001,c.currentTime+0.1);o.start();o.stop(c.currentTime+0.1);}catch(e){}}
+  function render(){var val=entry!==""?entry:total.toLocaleString("en-IN");var dl=val.replace(/,/g,"").length;var fs=dl<=3?112:dl<=5?88:dl<=7?70:dl<=9?54:42;var d=document.getElementById("display");d.textContent=val;d.style.fontSize=fs+"px";var items=tape.slice(-5);document.getElementById("tape").textContent=items.length?(tape.length>5?"... + ":"")+items.join(" + ")+" +":"\u00a0";}
+  function pop(){var d=document.getElementById("display");d.classList.remove("pop");void d.offsetWidth;d.classList.add("pop");}
+  function digit(d){beep("num");if(entry.length>=12)return;entry=entry==="0"?d:entry+d;render();}
+  function plus(){beep("plus");if(entry!==""){total+=parseFloat(entry)||0;tape.push(entry);entry="";pop();}render();}
+  function equals(){beep("eq");if(entry!==""){total+=parseFloat(entry)||0;tape.push(entry);entry="";pop();}render();}
+  function clear(){beep("c");total=0;entry="";tape=[];pop();render();}
+  function del(){beep("del");if(entry!==""){entry=entry.length>1?entry.slice(0,-1):"";}else if(tape.length>0){var last=tape.pop();total-=parseFloat(last)||0;entry=last;pop();}else if(total!==0){entry=String(total);total=0;pop();}render();}
+  document.querySelectorAll(".btn").forEach(function(btn){
+    btn.addEventListener("pointerdown",function(){
+      btn.classList.add("down");
+      var k=btn.dataset.key;
+      if(k>="0"&&k<="9")digit(k);
+      else if(k==="+")plus();
+      else if(k==="=")equals();
+      else if(k==="C")clear();
+      else if(k==="back")del();
+    });
+    ["pointerup","pointerleave","pointercancel"].forEach(function(ev){btn.addEventListener(ev,function(){btn.classList.remove("down");});});
+  });
+  document.addEventListener("keydown",function(e){if(e.key>="0"&&e.key<="9")digit(e.key);else if(e.key==="+")plus();else if(e.key==="Enter"||e.key==="=")equals();else if(e.key==="Backspace")del();else if(e.key==="Escape")clear();});
+  if("serviceWorker"in navigator)navigator.serviceWorker.register("sw.js").catch(function(){});
+  render();
+</script>
+</body>
+</html>
