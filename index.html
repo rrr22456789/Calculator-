@@ -13,7 +13,7 @@
   <link rel="icon" type="image/svg+xml" href="icons/icon.svg" />
   <title>Calc+</title>
   <style>
-    @import url('https://fonts.googleapis.com/css2?family=Nunito:wght@900&display=swap');
+    @import url('https://fonts.googleapis.com/css2?family=Nunito:wght@900&family=DM+Sans:wght@500;600;700&display=swap');
     *, *::before, *::after { box-sizing:border-box; margin:0; padding:0; -webkit-tap-highlight-color:transparent; }
 
     /* ── LIGHT ── */
@@ -215,28 +215,32 @@
 
     .btn {
       border:none; cursor:pointer; display:flex; align-items:center; justify-content:center;
-      outline:none; user-select:none; border-radius:16px;
+      outline:none; user-select:none; border-radius:22px;
       transition:box-shadow 70ms ease, transform 70ms ease, background 0.3s;
-      touch-action:manipulation; font-family:system-ui,-apple-system,sans-serif;
-      -webkit-user-select:none;
+      touch-action:manipulation; font-family:'DM Sans', system-ui, sans-serif;
+      -webkit-user-select:none; letter-spacing:-0.02em;
     }
 
-    .bn { height:12.5vw; font-size:8vw; font-weight:500; color:var(--ink);
+    /* Number buttons — squircle */
+    .bn { height:13vw; font-size:7.4vw; font-weight:700; color:var(--ink);
           background:linear-gradient(155deg,var(--face-hi) 0%,var(--face) 50%,var(--face-lo) 100%);
           box-shadow:0 5px 0 var(--sh-d),0 7px 14px rgba(0,0,0,.22),inset 0 1px 0 var(--sh-u); }
     .bn.down { transform:translateY(4px);
                background:linear-gradient(155deg,var(--face-lo) 0%,var(--face) 100%);
                box-shadow:0 1px 0 var(--sh-d),0 2px 4px rgba(0,0,0,.2),inset 0 2px 6px rgba(0,0,0,.2); }
 
-    .bu { height:10vw; font-size:5vw; font-weight:500; color:var(--ink-dim);
+    /* Utility buttons — pill */
+    .bu { height:11vw; font-size:5vw; font-weight:600; color:var(--ink-dim);
+          border-radius:50px;
           background:linear-gradient(155deg,var(--face-hi) 0%,var(--face) 50%,var(--face-lo) 100%);
           box-shadow:0 5px 0 var(--sh-d),0 7px 14px rgba(0,0,0,.2),inset 0 1px 0 var(--sh-u); }
     .bu.down { transform:translateY(4px);
                background:linear-gradient(155deg,var(--face-lo) 0%,var(--face) 100%);
                box-shadow:0 1px 0 var(--sh-d),0 2px 4px rgba(0,0,0,.15),inset 0 2px 5px rgba(0,0,0,.15); }
 
-    .bp { font-size:14vw; font-weight:200; color:var(--plus-ink);
-          grid-column:4; grid-row:1/span 3; border-radius:20px; height:100%;
+    /* Plus — tall block */
+    .bp { font-size:11vw; font-weight:300; color:var(--plus-ink);
+          grid-column:4; grid-row:1/span 3; border-radius:22px; height:100%;
           background:linear-gradient(160deg,var(--plus-bg1) 0%,var(--plus-bg2) 100%);
           box-shadow:0 6px 0 var(--plus-sh),0 9px 22px rgba(0,0,0,.4),inset 0 1px 0 rgba(255,255,255,.12);
           transition:box-shadow 70ms ease, transform 70ms ease, background 0.3s; }
@@ -244,16 +248,19 @@
                background:linear-gradient(160deg,var(--plus-bg2) 0%,var(--plus-bg1) 100%);
                box-shadow:0 1px 0 var(--plus-sh),0 2px 6px rgba(0,0,0,.4),inset 0 3px 10px rgba(0,0,0,.4); }
 
-    .bz { height:12.5vw; font-size:8vw; font-weight:500; color:var(--ink);
-          justify-content:flex-start; padding-left:7vw;
+    /* Zero — pill */
+    .bz { height:13vw; font-size:7.4vw; font-weight:700; color:var(--ink);
+          border-radius:50px;
+          justify-content:flex-start; padding-left:8vw;
           background:linear-gradient(155deg,var(--face-hi) 0%,var(--face) 50%,var(--face-lo) 100%);
           box-shadow:0 5px 0 var(--sh-d),0 7px 14px rgba(0,0,0,.22),inset 0 1px 0 var(--sh-u); }
     .bz.down { transform:translateY(4px);
                background:linear-gradient(155deg,var(--face-lo) 0%,var(--face) 100%);
                box-shadow:0 1px 0 var(--sh-d),0 2px 4px rgba(0,0,0,.18),inset 0 2px 6px rgba(0,0,0,.15); }
 
-    .be { height:12.5vw; font-size:7vw; font-weight:400; color:var(--eq-ink);
-          letter-spacing:0.1em;
+    /* Equals — pill */
+    .be { height:13vw; font-size:7vw; font-weight:600; color:var(--eq-ink);
+          border-radius:50px; letter-spacing:0.05em;
           background:linear-gradient(155deg,var(--eq-bg1) 0%,var(--eq-bg2) 100%);
           box-shadow:0 5px 0 var(--eq-sh),0 8px 18px rgba(0,0,0,.38),inset 0 1px 0 rgba(255,255,255,.1);
           transition:box-shadow 70ms ease, transform 70ms ease, background 0.3s; }
@@ -405,4 +412,4 @@
 })();
 </script>
 </body>
-                                            </html>
+  </html>
