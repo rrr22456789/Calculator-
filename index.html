@@ -84,17 +84,24 @@ html,body{height:100%;width:100%;overflow:hidden;background:#111;transition:back
 /* ═══════════════════════════════════
    LAYOUT EDITOR
 ═══════════════════════════════════ */
-.le-ov{position:fixed;inset:0;z-index:500;background:var(--le-bg);display:flex;flex-direction:column;transform:translateY(100%);transition:transform .45s cubic-bezier(.32,.72,0,1)}
+.le-ov{position:fixed;inset:0;z-index:500;background:var(--le-bg);display:flex;flex-direction:column;transform:translateY(100%);transition:transform .45s cubic-bezier(.32,.72,0,1);max-width:430px;margin:0 auto}
 .le-ov.open{transform:translateY(0)}
 .le-bar{display:flex;align-items:center;padding:16px 20px 12px;border-bottom:1px solid var(--sbrd);background:var(--sbg);flex-shrink:0}
 .le-cancel{background:none;border:none;color:var(--red);font-size:4.2vw;font-family:'DM Sans',sans-serif;font-weight:600;cursor:pointer;padding:6px 0;min-width:72px}
 .le-ttl{flex:1;text-align:center;font-size:4.8vw;font-weight:700;color:var(--ink);font-family:'DM Sans',sans-serif}
 .le-done{background:var(--acc);border:none;color:#fff;font-size:4.2vw;font-family:'DM Sans',sans-serif;font-weight:700;cursor:pointer;padding:7px 18px;border-radius:20px;min-width:72px;text-align:center}
 .le-hint{padding:6px 20px 5px;font-size:3vw;color:var(--ink-dim);font-family:'DM Sans',sans-serif;text-align:center;background:var(--sbg);border-bottom:1px solid var(--sbrd);flex-shrink:0}
-.le-canvas{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;position:relative;padding-bottom:80px}
+.le-canvas{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;position:relative;padding-bottom:80px;max-width:430px;margin:0 auto;width:100%}
 .le-canvas::-webkit-scrollbar{display:none}
 /* Grid container */
-.le-grid{position:relative;margin:0 12px;margin-top:8px}
+.le-grid{
+  position:relative;
+  margin:0 auto;
+  margin-top:8px;
+  /* Cap editor width on desktop — same as phone-wrap */
+  max-width:406px; /* 430px - 2×12px side padding */
+  padding:0 12px;
+}
 
 /* Ghost background cells */
 .le-gcell{position:absolute;background:var(--le-cell);border-radius:13px;border:var(--le-celld);pointer-events:none;transition:background .12s,border-color .12s}
@@ -190,9 +197,9 @@ html,body{height:100%;width:100%;overflow:hidden;background:#111;transition:back
 .le-ap-add:disabled{background:var(--ink-faint);opacity:.6;cursor:default}
 
 /* SETTINGS */
-.s-ov{position:fixed;inset:0;z-index:200;background:var(--ov);opacity:0;pointer-events:none;transition:opacity .35s}
+.s-ov{position:fixed;inset:0;z-index:200;background:var(--ov);opacity:0;pointer-events:none;transition:opacity .35s;display:flex;align-items:flex-end;justify-content:center}
 .s-ov.open{opacity:1;pointer-events:all}
-.s-sh{position:absolute;bottom:0;left:0;right:0;height:92vh;height:92dvh;background:var(--sbg);border-radius:24px 24px 0 0;transform:translateY(100%);transition:transform .42s cubic-bezier(.32,.72,0,1);display:flex;flex-direction:column;overflow:hidden}
+.s-sh{position:relative;width:100%;max-width:430px;height:min(92vh,92dvh,680px);background:var(--sbg);border-radius:24px 24px 0 0;transform:translateY(100%);transition:transform .42s cubic-bezier(.32,.72,0,1);display:flex;flex-direction:column;overflow:hidden}
 .s-ov.open .s-sh{transform:translateY(0)}
 .s-grab{width:40px;height:5px;border-radius:3px;background:var(--ink-faint);margin:10px auto 0;flex-shrink:0}
 .s-pages{position:relative;flex:1;overflow:hidden}
@@ -599,8 +606,15 @@ var IA={type:null};
 function recalc(){
   var g=document.getElementById('leGrid');
   var W=g.offsetWidth||320;
-  leCW=(W-GAP*(COLS+1))/COLS;
-  leCH=Math.round(leCW*0.7);
+  // Cap cell width to max 72px — keeps editor phone-sized on desktop
+  leCW=Math.min(72, Math.round((W-GAP*(COLS+1))/COLS));
+  leCH=Math.round(leCW*0.72);
+  updateLeGridOrigin();
+}
+function updateLeGridOrigin(){
+  // Always read live — accounts for canvas scroll
+  var g=document.getElementById('leGrid');
+  if(!g)return;
   var r=g.getBoundingClientRect();
   leGL=r.left;leGT=r.top;
 }
@@ -613,6 +627,7 @@ function bpx(b){
   };
 }
 function ptrToCell(px_,py_,cs,rs){
+  updateLeGridOrigin(); // always fresh — canvas scroll changes this
   var rx=px_-leGL-GAP, ry=py_-leGT-GAP;
   var rowBound=leWork?maxRow(leWork):50;
   var c=Math.max(1,Math.min(COLS-cs+1, Math.round(rx/(leCW+GAP))+1));
@@ -984,15 +999,13 @@ function onMoveMove(e){
   if(IA.type!=='move')return;
   var btn=leWork.find(function(x){return x.id===IA.id;});if(!btn)return;
 
-  // Move ghost exactly with pointer (relative to grid)
-  var canvas=document.getElementById('leCanvas');
-  var scrollOff=canvas.scrollTop;
-  var canvasRect=canvas.getBoundingClientRect();
+  // Refresh grid origin on every move (canvas scroll changes it)
+  updateLeGridOrigin();
 
   var gh=document.getElementById('le-ghost');
   if(gh){
     var origRc=bpx(btn);
-    var dx=e.clientX-leGL-GAP-(btn.col-1)*(leCW+GAP)-leCW/2;
+    // Center ghost on pointer
     var ghostX=Math.round(e.clientX-leGL-origRc.w/2);
     var ghostY=Math.round(e.clientY-leGT-origRc.h/2);
     gh.style.transition='none';
@@ -1000,7 +1013,7 @@ function onMoveMove(e){
     gh.style.top=ghostY+'px';
   }
 
-  // Calculate snap position
+  // Calculate snap position — ptrToCell also calls updateLeGridOrigin
   var snap=ptrToCell(e.clientX,e.clientY,btn.cs,btn.rs);
   if(snap.col===IA.snapCol&&snap.row===IA.snapRow)return; // same cell, skip
   IA.snapCol=snap.col;IA.snapRow=snap.row;
