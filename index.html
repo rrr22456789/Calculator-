@@ -31,8 +31,10 @@
   --acc:#0a84ff;--red:#ff453a;--grn:#30d158;--ov:rgba(0,0,0,.65);
   --le-bg:#181818;--le-cell:rgba(255,255,255,.045);--le-celld:1.5px dashed rgba(255,255,255,.12);
 }
-html,body{height:100%;width:100%;overflow:hidden;background:var(--bg);transition:background .3s}
-.phone{width:100vw;height:100vh;height:100dvh;background:var(--bg);display:grid;grid-template-rows:1fr auto;overflow:hidden}
+html,body{height:100%;width:100%;overflow:hidden;background:#111;transition:background .3s;margin:0}
+/* Phone shell — max 430px, centered on desktop */
+.phone-wrap{width:100vw;height:100vh;height:100dvh;display:flex;align-items:center;justify-content:center;background:#111}
+.phone{width:100%;max-width:430px;height:100%;max-height:860px;background:var(--bg);display:grid;grid-template-rows:1fr auto;overflow:hidden;position:relative;transition:background .3s}
 .toggle-wrap{position:absolute;top:16px;left:16px;z-index:10}
 .tog{width:64px;height:32px;border-radius:16px;background:var(--ttrack);cursor:pointer;position:relative;border:none;outline:none;padding:0;transition:background .3s;box-shadow:inset 0 2px 5px rgba(0,0,0,.28)}
 .tog::before{content:"☀️";position:absolute;left:7px;top:50%;transform:translateY(-50%);font-size:13px;pointer-events:none}
@@ -46,10 +48,10 @@ html,body{height:100%;width:100%;overflow:hidden;background:var(--bg);transition
 .tape-row{display:flex;flex-direction:row;align-items:baseline;gap:4px;overflow:hidden;flex-wrap:nowrap;max-width:100%}
 .tape-item{display:flex;align-items:baseline;gap:2px;opacity:0;transform:translateX(10px);animation:sIn .2s ease forwards}
 @keyframes sIn{to{opacity:1;transform:translateX(0)}}
-.t-num{font-family:'Courier New',monospace;font-size:3.8vw;color:var(--tc)}
-.t-op{font-family:'Courier New',monospace;font-size:3.4vw;color:var(--ink-faint);margin-left:1px}
+.t-num{font-family:'Courier New',monospace;font-size:clamp(11px,3.8vw,16px);color:var(--tc)}
+.t-op{font-family:'Courier New',monospace;font-size:clamp(10px,3.4vw,14px);color:var(--ink-faint);margin-left:1px}
 .num-wrap{display:flex;flex-direction:column;align-items:center;justify-content:center;flex-shrink:0;padding:6px 0 4px;gap:2px}
-.tot-lbl{font-size:2.8vw;color:var(--ink-faint);letter-spacing:.14em;text-transform:uppercase}
+.tot-lbl{font-size:clamp(9px,2.8vw,12px);color:var(--ink-faint);letter-spacing:.14em;text-transform:uppercase}
 .num{font-family:'Nunito',sans-serif;font-weight:900;line-height:1;letter-spacing:-.02em;text-align:center;white-space:nowrap;user-select:none;background:var(--numg);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;transition:font-size .12s ease}
 .sw-hint{font-size:2.8vw;color:var(--ink-faint);text-align:center;opacity:0;transition:opacity .4s;margin-top:2px}
 .sw-hint.show{opacity:1}
@@ -62,17 +64,21 @@ html,body{height:100%;width:100%;overflow:hidden;background:var(--bg);transition
 .btn-area{padding:6px 12px 26px}
 .btn-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:7px;width:100%}
 .btn{border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;outline:none;user-select:none;border-radius:22px;transition:box-shadow 70ms,transform 70ms,background .3s;touch-action:manipulation;font-family:'DM Sans',system-ui;-webkit-user-select:none}
-.b-dig{font-size:7.4vw;font-weight:700;color:var(--ink);height:13vw;background:linear-gradient(155deg,var(--face-hi),var(--face),var(--face-lo));box-shadow:0 5px 0 var(--sh-d),0 7px 14px rgba(0,0,0,.22),inset 0 1px 0 var(--sh-u)}
+.b-dig{font-size:clamp(18px,7.4vw,32px);font-weight:700;color:var(--ink);border-radius:18px;background:linear-gradient(155deg,var(--face-hi),var(--face),var(--face-lo));box-shadow:0 5px 0 var(--sh-d),0 7px 14px rgba(0,0,0,.22),inset 0 1px 0 var(--sh-u)}
 .b-dig.dn{transform:translateY(4px);background:linear-gradient(155deg,var(--face-lo),var(--face));box-shadow:0 1px 0 var(--sh-d),inset 0 2px 6px rgba(0,0,0,.2)}
-.b-act{font-size:5vw;font-weight:600;color:var(--ink-dim);height:11vw;border-radius:50px;background:linear-gradient(155deg,var(--face-hi),var(--face),var(--face-lo));box-shadow:0 5px 0 var(--sh-d),0 7px 14px rgba(0,0,0,.2),inset 0 1px 0 var(--sh-u)}
+/* b-act: radius set dynamically via JS based on cs */
+.b-act{font-size:clamp(14px,5vw,21px);font-weight:600;color:var(--ink-dim);background:linear-gradient(155deg,var(--face-hi),var(--face),var(--face-lo));box-shadow:0 5px 0 var(--sh-d),0 7px 14px rgba(0,0,0,.2),inset 0 1px 0 var(--sh-u)}
 .b-act.dn{transform:translateY(4px);background:linear-gradient(155deg,var(--face-lo),var(--face));box-shadow:0 1px 0 var(--sh-d),inset 0 2px 5px rgba(0,0,0,.15)}
-.b-op{font-size:11vw;font-weight:300;color:var(--pink);border-radius:22px;background:linear-gradient(160deg,var(--pbg1),var(--pbg2));box-shadow:0 6px 0 var(--psh),0 9px 22px rgba(0,0,0,.4),inset 0 1px 0 rgba(255,255,255,.12)}
+/* b-op: ALWAYS square (18px), never pill */
+.b-op{font-size:clamp(28px,11vw,46px);font-weight:300;color:var(--pink);border-radius:18px;background:linear-gradient(160deg,var(--pbg1),var(--pbg2));box-shadow:0 6px 0 var(--psh),0 9px 22px rgba(0,0,0,.4),inset 0 1px 0 rgba(255,255,255,.12)}
 .b-op.dn{transform:translateY(5px);background:linear-gradient(160deg,var(--pbg2),var(--pbg1));box-shadow:0 1px 0 var(--psh),inset 0 3px 10px rgba(0,0,0,.4)}
-.b-zero{font-size:7.4vw;font-weight:700;color:var(--ink);height:13vw;border-radius:50px;justify-content:flex-start;padding-left:8vw;background:linear-gradient(155deg,var(--face-hi),var(--face),var(--face-lo));box-shadow:0 5px 0 var(--sh-d),0 7px 14px rgba(0,0,0,.22),inset 0 1px 0 var(--sh-u)}
+/* b-zero: radius set dynamically */
+.b-zero{font-size:clamp(18px,7.4vw,32px);font-weight:700;color:var(--ink);justify-content:flex-start;padding-left:clamp(18px,8vw,28px);background:linear-gradient(155deg,var(--face-hi),var(--face),var(--face-lo));box-shadow:0 5px 0 var(--sh-d),0 7px 14px rgba(0,0,0,.22),inset 0 1px 0 var(--sh-u)}
 .b-zero.dn{transform:translateY(4px);background:linear-gradient(155deg,var(--face-lo),var(--face));box-shadow:0 1px 0 var(--sh-d),inset 0 2px 6px rgba(0,0,0,.15)}
-.b-eq{font-size:7vw;font-weight:600;color:var(--eink);height:13vw;border-radius:50px;background:linear-gradient(155deg,var(--ebg1),var(--ebg2));box-shadow:0 5px 0 var(--esh),0 8px 18px rgba(0,0,0,.38),inset 0 1px 0 rgba(255,255,255,.1)}
+/* b-eq: radius set dynamically */
+.b-eq{font-size:clamp(20px,7vw,30px);font-weight:600;color:var(--eink);background:linear-gradient(155deg,var(--ebg1),var(--ebg2));box-shadow:0 5px 0 var(--esh),0 8px 18px rgba(0,0,0,.38),inset 0 1px 0 rgba(255,255,255,.1)}
 .b-eq.dn{transform:translateY(4px);background:linear-gradient(155deg,var(--ebg2),var(--ebg1));box-shadow:0 1px 0 var(--esh),inset 0 3px 8px rgba(0,0,0,.35)}
-.b-ext{font-size:4.8vw;font-weight:700;color:var(--ink-dim);height:11vw;border-radius:50px;background:linear-gradient(155deg,var(--face-hi),var(--face),var(--face-lo));box-shadow:0 5px 0 var(--sh-d),0 7px 14px rgba(0,0,0,.2),inset 0 1px 0 var(--sh-u)}
+.b-ext{font-size:clamp(13px,4.8vw,20px);font-weight:700;color:var(--ink-dim);background:linear-gradient(155deg,var(--face-hi),var(--face),var(--face-lo));box-shadow:0 5px 0 var(--sh-d),0 7px 14px rgba(0,0,0,.2),inset 0 1px 0 var(--sh-u)}
 .b-ext.dn{transform:translateY(4px);background:linear-gradient(155deg,var(--face-lo),var(--face));box-shadow:0 1px 0 var(--sh-d),inset 0 2px 5px rgba(0,0,0,.15)}
 
 /* ═══════════════════════════════════
@@ -241,7 +247,7 @@ html,body{height:100%;width:100%;overflow:hidden;background:var(--bg);transition
 </style>
 </head>
 <body>
-<div class="phone">
+<div class="phone-wrap"><div class="phone">
   <div class="disp" id="disp">
     <div class="toggle-wrap"><button class="tog" id="tog"><span class="tog-ball"></span></button></div>
     <button class="sBtn" id="settingsBtn">⚙</button>
@@ -254,7 +260,7 @@ html,body{height:100%;width:100%;overflow:hidden;background:var(--bg);transition
     </div>
   </div>
   <div class="btn-area"><div class="btn-grid" id="btnGrid"></div></div>
-</div>
+</div></div>
 
 <!-- LAYOUT EDITOR -->
 <div class="le-ov" id="leOv">
@@ -490,22 +496,78 @@ var ACTS={clear:doCl,del:doDel,op:doOp,eq:doEq,
   decimal:doDecimal,percent:doPercent,negate:doNeg,sqrt:doSqrt,square:doSq,
   recip:doRec,ms:doMS,mr:doMR,mc:doMC,mod:doMod,pi:doPi};
 
+/* ── BUTTON RADIUS RULES ──
+   b-op (operators +−×÷): ALWAYS 18px square
+   b-dig (digits 1-9):    ALWAYS 18px square
+   b-act, b-zero, b-eq, b-ext: 18px when cs=1, pill(50px) when cs>=2
+*/
+function getBtnRadius(cls,cs,rs){
+  rs=rs||1;
+  // Operators always square (they're meant to be tall blocks)
+  if(cls==='b-op') return '18px';
+  // Digits always square
+  if(cls==='b-dig') return '18px';
+  // Others: pill only when cs>=2 (wide) OR rs=1 and cs=1 → square
+  return (cs>=2||rs>=2)?'50px':'18px';
+}
+
 /* ── BUILD CALCULATOR ── */
+// Row height in px (computed once from viewport, capped at 56px for desktop)
+var CALC_ROW_H = 0;
+var CALC_GAP   = 7;
+
+function getRowH(){
+  // clamp(44, 13vw, 56) — computed
+  var vw = Math.min(window.innerWidth, 430);
+  return Math.min(56, Math.max(44, Math.round(vw * 0.13)));
+}
+
 function buildCalc(){
+  CALC_ROW_H = getRowH();
   var g=document.getElementById('btnGrid');g.innerHTML='';
-  var L=getLayout();var mR=1;L.forEach(function(b){mR=Math.max(mR,b.row+b.rs-1);});
-  g.style.gridTemplateRows='repeat('+mR+',auto)';
-  L.forEach(function(b){
-    if(b.act==='blank')return; // blank slots don't render in calculator
+  var L=getLayout();
+  var active=L.filter(function(b){return b.act!=='blank';});
+
+  var mR=1;
+  active.forEach(function(b){mR=Math.max(mR,b.row+b.rs-1);});
+
+  // Build grid with explicit px row heights — NO auto, NO 1fr rows
+  var rowStr='';
+  for(var i=0;i<mR;i++) rowStr+=(i?(' '+CALC_ROW_H+'px'):(CALC_ROW_H+'px'));
+  g.style.cssText='display:grid;grid-template-columns:repeat('+COLS+',1fr);grid-template-rows:'+rowStr+';gap:'+CALC_GAP+'px;width:100%';
+
+  active.forEach(function(b){
     var el=document.createElement('button');
-    el.className='btn '+b.cls;el.id='calc-'+b.id;
+    el.className='btn '+b.cls;
+    el.id='calc-'+b.id;
     el.textContent=b.act==='op'?cfg.mainOp:b.lbl;
+
+    // Exact grid placement from layout
     el.style.gridColumn=b.col+' / span '+b.cs;
-    el.style.gridRow=b.row+' / span '+b.rs;
-    if(b.rs===1)el.style.height=(b.cls==='b-act'||b.cls==='b-ext')?'11vw':'13vw';
-    if(b.act==='d0'){el.style.justifyContent='flex-start';el.style.paddingLeft='8vw';}
+    el.style.gridRow   =b.row+' / span '+b.rs;
+
+    // Explicit pixel height = rows spanned × rowH + gaps between them
+    var h = b.rs * CALC_ROW_H + (b.rs-1) * CALC_GAP;
+    el.style.height = h+'px';
+    el.style.boxSizing='border-box';
+
+    // Border radius — rule-based
+    el.style.borderRadius=getBtnRadius(b.cls,b.cs,b.rs);
+
+    // Font size
+    var fz;
+    if(b.cls==='b-op')       fz=Math.round(h*0.42);  // op: taller = bigger font
+    else if(b.cls==='b-act'||b.cls==='b-ext') fz=Math.min(21,Math.round(CALC_ROW_H*0.38));
+    else                     fz=Math.min(32,Math.round(CALC_ROW_H*0.52));
+    el.style.fontSize=fz+'px';
+
+    if(b.act==='d0'){
+      el.style.justifyContent='flex-start';
+      el.style.paddingLeft=Math.round(CALC_ROW_H*0.35)+'px';
+    }
+
     el.addEventListener('pointerdown',function(e){e.preventDefault();el.classList.add('dn');var fn=ACTS[b.act];if(fn)fn();});
-    el.addEventListener('pointerup',function(){el.classList.remove('dn');});
+    el.addEventListener('pointerup',  function(){el.classList.remove('dn');});
     el.addEventListener('pointerleave',function(){el.classList.remove('dn');});
     el.addEventListener('pointercancel',function(){el.classList.remove('dn');});
     g.appendChild(el);
@@ -828,23 +890,26 @@ function refreshSelection(){
 
 /* Apply a layout to DOM elements (animate pushed buttons) */
 function applyLayoutToDOM(layout,animatePushed,dragId){
-  var rows=maxRow(layout)+2;
-  // Grow grid if needed
-  var currentH=parseInt(document.getElementById('leGrid').style.height)||0;
-  var neededH=GAP+rows*(leCH+GAP)+60;
-  if(neededH>currentH)document.getElementById('leGrid').style.height=neededH+'px';
+  var rows=maxRow(layout);
+  var neededH=GAP+rows*(leCH+GAP)+16;
+  document.getElementById('leGrid').style.height=neededH+'px';
 
   layout.forEach(function(b){
     var el=document.getElementById('le-'+b.id);
     if(!el)return;
     var rc=bpx(b);
-    if(b.id===dragId){
-      // Drag source: no transition, just dim it
-      el.style.transition='opacity .1s';
-      return;
-    }
+    if(b.id===dragId){el.style.transition='opacity .1s';return;}
+
+    // ONLY move buttons that actually changed position/size
+    var curL=parseFloat(el.style.left)||0;
+    var curT=parseFloat(el.style.top)||0;
+    var curW=parseFloat(el.style.width)||0;
+    var curH=parseFloat(el.style.height)||0;
+    var changed=Math.abs(curL-rc.x)>1||Math.abs(curT-rc.y)>1||Math.abs(curW-rc.w)>1||Math.abs(curH-rc.h)>1;
+    if(!changed)return; // skip stable buttons — no jitter
+
     if(animatePushed){
-      el.style.transition='left .18s cubic-bezier(.34,1.1,.64,1),top .18s cubic-bezier(.34,1.1,.64,1),width .18s cubic-bezier(.34,1.1,.64,1),height .18s cubic-bezier(.34,1.1,.64,1)';
+      el.style.transition='left .2s cubic-bezier(.34,1.1,.64,1),top .2s cubic-bezier(.34,1.1,.64,1),width .2s cubic-bezier(.34,1.1,.64,1),height .2s cubic-bezier(.34,1.1,.64,1)';
     } else {
       el.style.transition='none';
     }
@@ -1207,7 +1272,7 @@ function openAddPanel(){
 }
 function closeAddPanel(){document.getElementById('leAp').classList.remove('open');}
 
-window.addEventListener('resize',function(){if(document.getElementById('leOv').classList.contains('open')){buildEditorDOM();}});
+window.addEventListener('resize',function(){buildCalc();render();if(document.getElementById('leOv').classList.contains('open')){buildEditorDOM();}});
 
 /* ── TOAST ── */
 var tT=null;
