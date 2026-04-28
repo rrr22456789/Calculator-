@@ -5,6 +5,10 @@
 <meta name="viewport" content="width=device-width,initial-scale=1.0,viewport-fit=cover"/>
 <meta name="theme-color" content="#dedad6" id="theme-meta"/>
 <meta name="apple-mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-status-bar-style" content="default"/>
+<meta name="apple-mobile-web-app-title" content="Calc+"/>
+<link rel="manifest" href="manifest.json"/>
+<link rel="apple-touch-icon" href="icon-192.png"/>
 <title>Calc+</title>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Nunito:wght@900&family=DM+Sans:wght@500;600;700&display=swap');
@@ -39,16 +43,19 @@ html,body{height:100%;width:100%;overflow:hidden;background:var(--bg);transition
   background:var(--bg);
   transition:background .3s;
 }
+/* Only show sidebar bg on truly wide screens */
+@media(min-width:500px){
+  .phone-wrap{background:#1a1a1a}
+}
 .phone{
   width:100%;height:100%;
   background:var(--bg);
-  display:grid;grid-template-rows:1fr 65dvh;
+  display:grid;grid-template-rows:1fr 58dvh;
   overflow:hidden;position:relative;
   transition:background .3s;
 }
 @media(max-height:500px){
-  .phone{grid-template-rows:1fr 70dvh}
-  .btn-area{padding:4px 10px env(safe-area-inset-bottom,8px)}
+  .phone{grid-template-rows:1fr 68dvh}
 }
 .toggle-wrap{position:absolute;top:16px;left:16px;z-index:10}
 .tog{width:64px;height:32px;border-radius:16px;background:var(--ttrack);cursor:pointer;position:relative;border:none;outline:none;padding:0;transition:background .3s;box-shadow:inset 0 2px 5px rgba(0,0,0,.28)}
@@ -103,17 +110,11 @@ html,body{height:100%;width:100%;overflow:hidden;background:var(--bg);transition
 @keyframes shake{0%,100%{transform:translateX(0) scale(1)}25%{transform:translateX(-8px) scale(1.02)}75%{transform:translateX(8px) scale(1.02)}}
 .shake{animation:shake .32s ease}
 .btn-area{
-  display:flex;flex-direction:column;justify-content:stretch;
   padding:6px 12px env(safe-area-inset-bottom,16px);
   height:100%;box-sizing:border-box;
+  display:flex;flex-direction:column;
 }
-.btn-grid{
-  display:grid;
-  grid-template-columns:repeat(4,1fr);
-  gap:7px;
-  width:100%;
-  flex:1;
-}
+.btn-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:7px;width:100%}
 .btn{border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;outline:none;user-select:none;border-radius:22px;transition:box-shadow 70ms,transform 70ms,background .3s;touch-action:manipulation;font-family:'DM Sans',system-ui;-webkit-user-select:none}
 .b-dig{font-size:clamp(18px,7.4vw,32px);font-weight:700;color:var(--ink);border-radius:18px;background:linear-gradient(155deg,var(--face-hi),var(--face),var(--face-lo));box-shadow:0 5px 0 var(--sh-d),0 7px 14px rgba(0,0,0,.22),inset 0 1px 0 var(--sh-u)}
 .b-dig.dn{transform:translateY(4px);background:linear-gradient(155deg,var(--face-lo),var(--face));box-shadow:0 1px 0 var(--sh-d),inset 0 2px 6px rgba(0,0,0,.2)}
@@ -341,7 +342,7 @@ html,body{height:100%;width:100%;overflow:hidden;background:var(--bg);transition
 .hist-bar{
   display:flex;align-items:center;
   padding:10px 16px 8px;
-  flex-shrink:0;border-bottom:1px solid var(--sbrd);
+  flex-shrink:0;border-bottom:1px solid var(--s-brd);
   position:relative;
 }
 .hist-grab{
@@ -404,7 +405,7 @@ html,body{height:100%;width:100%;overflow:hidden;background:var(--bg);transition
   box-shadow:0 2px 8px rgba(0,0,0,.07);
   cursor:pointer;
   transition:background .15s,transform .1s;
-  border:1px solid var(--sbrd);
+  border:1px solid var(--s-brd);
 }
 .hist-card:active{transform:scale(.98);background:var(--face-hi);}
 .hist-card-body{padding:12px 14px 8px;}
@@ -421,7 +422,7 @@ html,body{height:100%;width:100%;overflow:hidden;background:var(--bg);transition
 }
 .hist-card-footer{
   display:flex;align-items:center;justify-content:space-between;
-  padding:6px 14px 10px;border-top:1px solid var(--sbrd);
+  padding:6px 14px 10px;border-top:1px solid var(--s-brd);
   margin-top:6px;
 }
 .hist-card-time{
@@ -595,20 +596,6 @@ html,body{height:100%;width:100%;overflow:hidden;background:var(--bg);transition
       <div class="s-pg" id="sHistory">
         <div class="s-hdr"><button class="s-back" data-back><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>Settings</button><span class="s-ttl">History &amp; Tape</span></div>
         <div class="s-sc">
-          <div class="s-lbl">Tape Length</div>
-          <div class="s-box">
-            <div class="s-row nt" style="padding:14px 16px 8px">
-              <div class="s-seg" id="segTape">
-                <button class="s-so sel" data-val="3">3</button>
-                <button class="s-so" data-val="5">5</button>
-                <button class="s-so" data-val="8">8</button>
-                <button class="s-so" data-val="10">10</button>
-              </div>
-            </div>
-            <div class="s-row nt">
-              <span style="font-size:clamp(11px,3.5vw,14px);color:var(--ink-dim)">Lines shown above the display.</span>
-            </div>
-          </div>
           <div class="s-lbl">Actions</div>
           <div class="s-box"><div class="s-row" id="clrHist"><div class="s-ri">🗑️</div><span class="s-rl" style="color:var(--red)">Clear All History</span></div></div>
         </div>
@@ -874,9 +861,9 @@ var CALC_ROW_H = 0;
 var CALC_GAP   = 7;
 
 function getRowH(){
-  // Used only for font-size estimation; layout driven by CSS dvh
-  var btnH = window.innerHeight * 0.65;
-  return Math.min(96, Math.max(54, Math.round((btnH - 4*CALC_GAP - 30) / 5)));
+  // Font-size estimation only — layout driven by CSS 58dvh
+  var btnH = window.innerHeight * 0.58;
+  return Math.min(96, Math.max(54, Math.round((btnH - 4*7 - 30) / 5)));
 }
 
 function buildCalc(){
@@ -888,10 +875,11 @@ function buildCalc(){
   var mR=1;
   active.forEach(function(b){mR=Math.max(mR,b.row+b.rs-1);});
 
-  // Rows use 1fr — actual height driven by CSS (65dvh on .phone grid)
+  // Build grid with explicit px row heights — NO auto, NO 1fr rows
+  // Rows use 1fr so they fill the CSS dvh-allocated space
   var rowStr='';
   for(var i=0;i<mR;i++) rowStr+=(i?' 1fr':'1fr');
-  g.style.cssText='display:grid;grid-template-columns:repeat('+COLS+',1fr);grid-template-rows:'+rowStr+';gap:'+CALC_GAP+'px;width:100%;height:100%';
+  g.style.cssText='display:grid;grid-template-columns:repeat('+COLS+',1fr);grid-template-rows:'+rowStr+';gap:'+CALC_GAP+'px;width:100%;height:100%;flex:1';
 
   active.forEach(function(b){
     var el=document.createElement('button');
