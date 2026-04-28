@@ -109,12 +109,12 @@ html,body{height:100%;width:100%;overflow:hidden;background:var(--bg);transition
 .btn-grid{
   display:grid;
   grid-template-columns:repeat(4,1fr);
-  grid-auto-rows:clamp(56px,12.5dvh,92px);
+  grid-auto-rows:clamp(52px,15vw,72px);
   gap:7px;
   width:100%;
 }
 @media(max-height:500px){
-  .btn-grid{grid-auto-rows:clamp(40px,9dvh,56px);gap:4px}
+  .btn-grid{grid-auto-rows:clamp(38px,11vw,52px);gap:4px}
   .btn-area{padding:4px 8px env(safe-area-inset-bottom,8px)}
 }
 .btn{border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;outline:none;user-select:none;border-radius:22px;transition:box-shadow 70ms,transform 70ms,background .3s;touch-action:manipulation;font-family:'DM Sans',system-ui;-webkit-user-select:none}
@@ -884,7 +884,7 @@ function buildCalc(){
   active.forEach(function(b){mR=Math.max(mR,b.row+b.rs-1);});
 
   // CSS grid-auto-rows handles all row sizing — no JS pixel heights needed
-  g.style.cssText='display:grid;grid-template-columns:repeat('+COLS+',1fr);grid-auto-rows:clamp(56px,12.5dvh,92px);gap:7px;width:100%';
+  g.style.cssText='display:grid;grid-template-columns:repeat('+COLS+',1fr);grid-auto-rows:clamp(52px,15vw,72px);gap:7px;width:100%';
 
   active.forEach(function(b){
     var el=document.createElement('button');
