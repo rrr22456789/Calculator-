@@ -39,23 +39,16 @@ html,body{height:100%;width:100%;overflow:hidden;background:var(--bg);transition
   background:var(--bg);
   transition:background .3s;
 }
-@media(min-width:500px){
-  .phone-wrap{background:#1a1a1a}
-}
 .phone{
-  width:100%;max-width:430px;
-  height:100%;max-height:860px;
+  width:100%;height:100%;
   background:var(--bg);
-  display:grid;grid-template-rows:minmax(160px,1fr) auto;
+  display:grid;grid-template-rows:1fr 65dvh;
   overflow:hidden;position:relative;
   transition:background .3s;
 }
-@media(max-width:499px){
-  .phone{max-width:100%;max-height:100%}
-}
 @media(max-height:500px){
-  .btn-grid{grid-auto-rows:clamp(42px,9dvh,60px);gap:5px}
-  .btn-area{padding:4px 10px env(safe-area-inset-bottom,10px)}
+  .phone{grid-template-rows:1fr 70dvh}
+  .btn-area{padding:4px 10px env(safe-area-inset-bottom,8px)}
 }
 .toggle-wrap{position:absolute;top:16px;left:16px;z-index:10}
 .tog{width:64px;height:32px;border-radius:16px;background:var(--ttrack);cursor:pointer;position:relative;border:none;outline:none;padding:0;transition:background .3s;box-shadow:inset 0 2px 5px rgba(0,0,0,.28)}
@@ -109,13 +102,17 @@ html,body{height:100%;width:100%;overflow:hidden;background:var(--bg);transition
 .pop{animation:pop .22s cubic-bezier(.34,1.56,.64,1) both}
 @keyframes shake{0%,100%{transform:translateX(0) scale(1)}25%{transform:translateX(-8px) scale(1.02)}75%{transform:translateX(8px) scale(1.02)}}
 .shake{animation:shake .32s ease}
-.btn-area{padding:6px 12px env(safe-area-inset-bottom,20px)}
+.btn-area{
+  display:flex;flex-direction:column;justify-content:stretch;
+  padding:6px 12px env(safe-area-inset-bottom,16px);
+  height:100%;box-sizing:border-box;
+}
 .btn-grid{
   display:grid;
   grid-template-columns:repeat(4,1fr);
-  grid-auto-rows:clamp(54px,12dvh,88px);
   gap:7px;
   width:100%;
+  flex:1;
 }
 .btn{border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;outline:none;user-select:none;border-radius:22px;transition:box-shadow 70ms,transform 70ms,background .3s;touch-action:manipulation;font-family:'DM Sans',system-ui;-webkit-user-select:none}
 .b-dig{font-size:clamp(18px,7.4vw,32px);font-weight:700;color:var(--ink);border-radius:18px;background:linear-gradient(155deg,var(--face-hi),var(--face),var(--face-lo));box-shadow:0 5px 0 var(--sh-d),0 7px 14px rgba(0,0,0,.22),inset 0 1px 0 var(--sh-u)}
@@ -877,12 +874,9 @@ var CALC_ROW_H = 0;
 var CALC_GAP   = 7;
 
 function getRowH(){
-  // Use screen.height — unaffected by browser URL bar
-  var vh = (window.screen && window.screen.height) ? window.screen.height : window.innerHeight;
-  var ROWS = 5;
-  // Target: button area takes 72% of screen height
-  var h = Math.round((vh * 0.72 - (ROWS - 1) * CALC_GAP - 46) / ROWS);
-  return Math.min(96, Math.max(54, h));
+  // Used only for font-size estimation; layout driven by CSS dvh
+  var btnH = window.innerHeight * 0.65;
+  return Math.min(96, Math.max(54, Math.round((btnH - 4*CALC_GAP - 30) / 5)));
 }
 
 function buildCalc(){
@@ -894,10 +888,10 @@ function buildCalc(){
   var mR=1;
   active.forEach(function(b){mR=Math.max(mR,b.row+b.rs-1);});
 
-  // Build grid with explicit px row heights — NO auto, NO 1fr rows
+  // Rows use 1fr — actual height driven by CSS (65dvh on .phone grid)
   var rowStr='';
-  for(var i=0;i<mR;i++) rowStr+=(i?(' '+CALC_ROW_H+'px'):(CALC_ROW_H+'px'));
-  g.style.cssText='display:grid;grid-template-columns:repeat('+COLS+',1fr);grid-template-rows:'+rowStr+';gap:'+CALC_GAP+'px;width:100%';
+  for(var i=0;i<mR;i++) rowStr+=(i?' 1fr':'1fr');
+  g.style.cssText='display:grid;grid-template-columns:repeat('+COLS+',1fr);grid-template-rows:'+rowStr+';gap:'+CALC_GAP+'px;width:100%;height:100%';
 
   active.forEach(function(b){
     var el=document.createElement('button');
