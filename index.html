@@ -514,7 +514,10 @@ html,body{height:100%;width:100%;overflow:hidden;background:var(--bg);transition
     <span class="le-ttl">Edit Layout</span>
     <button class="le-done" id="leDone">Done</button>
   </div>
-  <div class="le-hint">Tap to select &nbsp;·&nbsp; Drag to move &nbsp;·&nbsp; ↘ grip to resize &nbsp;·&nbsp; ✕ to remove</div>
+  <div class="le-hint" style="display:flex;align-items:center;justify-content:space-between;gap:8px">
+    <span>Tap · Drag to move · ↘ resize · ✕ remove</span>
+    <button id="leReset" style="background:none;border:1px solid var(--red);color:var(--red);border-radius:14px;padding:3px 12px;font-size:clamp(10px,3.2vw,13px);font-family:'DM Sans',sans-serif;font-weight:600;cursor:pointer;white-space:nowrap;flex-shrink:0">↺ Reset</button>
+  </div>
   <div class="le-canvas" id="leCanvas">
     <div class="le-grid" id="leGrid"></div>
   </div>
@@ -674,7 +677,20 @@ function loadHist(){try{var s=localStorage.getItem(HIST_KEY);if(s)histData=JSON.
 function saveHist(){try{localStorage.setItem(HIST_KEY,JSON.stringify(histData.slice(-200)));}catch(e){}}
 var cfg=JSON.parse(JSON.stringify(DEF_CFG));
 function getLayout(){if(!cfg.layout)cfg.layout=JSON.parse(JSON.stringify(DEF_LAYOUT));return cfg.layout;}
-function loadCfg(){try{var s=localStorage.getItem('calcpx4');if(s)Object.assign(cfg,JSON.parse(s));}catch(e){}}
+function loadCfg(){
+  try{
+    var s=localStorage.getItem('calcpx4');
+    if(s){
+      var saved=JSON.parse(s);
+      Object.assign(cfg,saved);
+      // Validate layout — if any button is missing id/col/row, reset to default
+      if(cfg.layout && Array.isArray(cfg.layout)){
+        var valid=cfg.layout.every(function(b){return b&&b.id&&b.col&&b.row;});
+        if(!valid){cfg.layout=null;}
+      }
+    }
+  }catch(e){cfg.layout=null;}
+}
 function saveCfg(){try{localStorage.setItem('calcpx4',JSON.stringify(cfg));}catch(e){}}
 
 /* ── CALC STATE ── */
@@ -1858,6 +1874,13 @@ function init(){
   document.querySelectorAll('[data-back]').forEach(function(el){el.addEventListener('click',sBack);});
   document.getElementById('openLayoutBtn').addEventListener('click',function(){closeSettings();setTimeout(openLE,320);});
   document.getElementById('leCancel').addEventListener('click',closeLE_cancel);
+  document.getElementById('leReset').addEventListener('click',function(){
+    if(confirm('Reset to default layout?')){
+      leWork=JSON.parse(JSON.stringify(DEF_LAYOUT));
+      renderLE();
+      showToast('Layout reset ✓');
+    }
+  });
   document.getElementById('leDone').addEventListener('click',closeLE_done);
   document.getElementById('leFab').addEventListener('click',openAddPanel);
   document.getElementById('leApClose').addEventListener('click',closeAddPanel);
