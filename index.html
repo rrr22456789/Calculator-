@@ -46,15 +46,12 @@ html,body{height:100%;width:100%;overflow:hidden;background:var(--bg);transition
   .phone-wrap{background:#1a1a1a}
 }
 .phone{
-  width:100%;
-  height:100%;
+  width:100%;height:100%;
   background:var(--bg);
-  display:grid;grid-template-rows:1fr 55dvh;
+  display:grid;
+  grid-template-rows:1fr auto;
   overflow:hidden;position:relative;
   transition:background .3s;
-}
-@media(max-width:499px){
-  .phone{grid-template-rows:1fr 58dvh}
 }
 .toggle-wrap{position:absolute;top:16px;left:16px;z-index:10}
 .tog{width:64px;height:32px;border-radius:16px;background:var(--ttrack);cursor:pointer;position:relative;border:none;outline:none;padding:0;transition:background .3s;box-shadow:inset 0 2px 5px rgba(0,0,0,.28)}
@@ -108,8 +105,18 @@ html,body{height:100%;width:100%;overflow:hidden;background:var(--bg);transition
 .pop{animation:pop .22s cubic-bezier(.34,1.56,.64,1) both}
 @keyframes shake{0%,100%{transform:translateX(0) scale(1)}25%{transform:translateX(-8px) scale(1.02)}75%{transform:translateX(8px) scale(1.02)}}
 .shake{animation:shake .32s ease}
-.btn-area{padding:4px 10px env(safe-area-inset-bottom,12px);height:100%;box-sizing:border-box;display:flex;flex-direction:column}
-.btn-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:4px;width:100%}
+.btn-area{padding:6px 12px env(safe-area-inset-bottom,18px)}
+.btn-grid{
+  display:grid;
+  grid-template-columns:repeat(4,1fr);
+  grid-auto-rows:clamp(56px,12.5dvh,92px);
+  gap:7px;
+  width:100%;
+}
+@media(max-height:500px){
+  .btn-grid{grid-auto-rows:clamp(40px,9dvh,56px);gap:4px}
+  .btn-area{padding:4px 8px env(safe-area-inset-bottom,8px)}
+}
 .btn{border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;outline:none;user-select:none;border-radius:22px;transition:box-shadow 70ms,transform 70ms,background .3s;touch-action:manipulation;font-family:'DM Sans',system-ui;-webkit-user-select:none}
 .b-dig{font-size:clamp(18px,7.4vw,32px);font-weight:700;color:var(--ink);border-radius:18px;background:linear-gradient(155deg,var(--face-hi),var(--face),var(--face-lo));box-shadow:0 5px 0 var(--sh-d),0 7px 14px rgba(0,0,0,.22),inset 0 1px 0 var(--sh-u)}
 .b-dig.dn{transform:translateY(4px);background:linear-gradient(155deg,var(--face-lo),var(--face));box-shadow:0 1px 0 var(--sh-d),inset 0 2px 6px rgba(0,0,0,.2)}
@@ -337,7 +344,7 @@ html,body{height:100%;width:100%;overflow:hidden;background:var(--bg);transition
 .hist-bar{
   display:flex;align-items:center;
   padding:10px 16px 8px;
-  flex-shrink:0;border-bottom:1px solid var(--s-brd);
+  flex-shrink:0;border-bottom:1px solid var(--sbrd);
   position:relative;
 }
 .hist-grab{
@@ -400,7 +407,7 @@ html,body{height:100%;width:100%;overflow:hidden;background:var(--bg);transition
   box-shadow:0 2px 8px rgba(0,0,0,.07);
   cursor:pointer;
   transition:background .15s,transform .1s;
-  border:1px solid var(--s-brd);
+  border:1px solid var(--sbrd);
 }
 .hist-card:active{transform:scale(.98);background:var(--face-hi);}
 .hist-card-body{padding:12px 14px 8px;}
@@ -417,7 +424,7 @@ html,body{height:100%;width:100%;overflow:hidden;background:var(--bg);transition
 }
 .hist-card-footer{
   display:flex;align-items:center;justify-content:space-between;
-  padding:6px 14px 10px;border-top:1px solid var(--s-brd);
+  padding:6px 14px 10px;border-top:1px solid var(--sbrd);
   margin-top:6px;
 }
 .hist-card-time{
@@ -867,18 +874,8 @@ function getBtnRadius(cls,cs,rs){
 }
 
 /* ── BUILD CALCULATOR ── */
-// Row height in px (computed once from viewport, capped at 56px for desktop)
-var CALC_ROW_H = 0;
-var CALC_GAP   = 4;
-
-function getRowH(){
-  // Font-size estimate only — layout driven by CSS 60dvh
-  var h = window.innerHeight * 0.60;
-  return Math.min(96, Math.max(54, Math.round((h - 4*CALC_GAP - 30) / 5)));
-}
 
 function buildCalc(){
-  CALC_ROW_H = getRowH();
   var g=document.getElementById('btnGrid');g.innerHTML='';
   var L=getLayout();
   var active=L.filter(function(b){return b.act!=='blank';});
@@ -886,10 +883,8 @@ function buildCalc(){
   var mR=1;
   active.forEach(function(b){mR=Math.max(mR,b.row+b.rs-1);});
 
-  // Build grid with explicit px row heights — NO auto, NO 1fr rows
-  var rowStr='';
-  for(var i=0;i<mR;i++) rowStr+=(i?' 1fr':'1fr');
-  g.style.cssText='display:grid;grid-template-columns:repeat('+COLS+',1fr);grid-template-rows:'+rowStr+';gap:'+CALC_GAP+'px;width:100%;height:100%;flex:1';
+  // CSS grid-auto-rows handles all row sizing — no JS pixel heights needed
+  g.style.cssText='display:grid;grid-template-columns:repeat('+COLS+',1fr);grid-auto-rows:clamp(56px,12.5dvh,92px);gap:7px;width:100%';
 
   active.forEach(function(b){
     var el=document.createElement('button');
@@ -901,24 +896,23 @@ function buildCalc(){
     el.style.gridColumn=b.col+' / span '+b.cs;
     el.style.gridRow   =b.row+' / span '+b.rs;
 
-    // Explicit pixel height = rows spanned × rowH + gaps between them
-    var h = b.rs * CALC_ROW_H + (b.rs-1) * CALC_GAP;
-    el.style.height = h+'px';
+    // Height driven by CSS grid — just tell button to fill its cell
+    el.style.height='100%';
     el.style.boxSizing='border-box';
 
     // Border radius — rule-based
     el.style.borderRadius=getBtnRadius(b.cls,b.cs,b.rs);
 
-    // Font size
-    var fz;
-    if(b.cls==='b-op')       fz=Math.round(h*0.42);  // op: taller = bigger font
-    else if(b.cls==='b-act'||b.cls==='b-ext') fz=Math.min(21,Math.round(CALC_ROW_H*0.38));
-    else                     fz=Math.min(32,Math.round(CALC_ROW_H*0.52));
-    el.style.fontSize=fz+'px';
+    // Font size from CSS classes — override only for op which needs scale with height
+    var fz='';
+    if(b.cls==='b-op') fz='clamp(28px,11vw,46px)';
+    else if(b.cls==='b-act'||b.cls==='b-ext') fz='clamp(13px,5vw,20px)';
+    else fz='clamp(16px,7vw,30px)';
+    el.style.fontSize=fz;
 
     if(b.act==='d0'){
       el.style.justifyContent='flex-start';
-      el.style.paddingLeft=Math.round(CALC_ROW_H*0.35)+'px';
+      el.style.paddingLeft='clamp(16px,8vw,26px)';
     }
 
     el.addEventListener('pointerdown',function(e){e.preventDefault();el.classList.add('dn');var fn=ACTS[b.act];if(fn)fn();});
@@ -1633,7 +1627,7 @@ function openAddPanel(){
 }
 function closeAddPanel(){document.getElementById('leAp').classList.remove('open');}
 
-window.addEventListener('resize',function(){buildCalc();render();if(document.getElementById('leOv').classList.contains('open')){buildEditorDOM();}});
+window.addEventListener('resize',function(){if(document.getElementById('leOv').classList.contains('open')){buildEditorDOM();}});
 
 
 /* ═══════════════════════════════════════
