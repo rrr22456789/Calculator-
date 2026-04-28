@@ -877,9 +877,17 @@ var CALC_ROW_H = 0;
 var CALC_GAP   = 7;
 
 function getRowH(){
-  // clamp(44, 13vw, 56) — computed
-  var vw = Math.min(window.innerWidth, 430);
-  return Math.min(56, Math.max(44, Math.round(vw * 0.13)));
+  var vw  = Math.min(window.innerWidth, 430);
+  var vh  = window.innerHeight;
+  var ROWS = 5;
+  // Height-based: buttons should take ~62% of screen height
+  // 5 rows + 4 gaps (7px each) + btn-area padding (~46px)
+  var fromH = Math.round((vh * 0.62 - (ROWS - 1) * CALC_GAP - 46) / ROWS);
+  // Width-based: cells shouldn't be wider than ~1.1x their height
+  var cellW = Math.round((vw - 3 * CALC_GAP - 24) / 4);
+  var fromW = Math.round(cellW * 1.1);
+  // Use the smaller of the two (portrait phones → fromH wins, wide/desktop → fromW caps)
+  return Math.min(88, Math.max(54, Math.min(fromH, fromW)));
 }
 
 function buildCalc(){
