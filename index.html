@@ -49,12 +49,12 @@ html,body{height:100%;width:100%;overflow:hidden;background:var(--bg);transition
   width:100%;
   height:100%;
   background:var(--bg);
-  display:grid;grid-template-rows:1fr 60dvh;
+  display:grid;grid-template-rows:1fr 55dvh;
   overflow:hidden;position:relative;
   transition:background .3s;
 }
 @media(max-width:499px){
-  .phone{grid-template-rows:1fr 62dvh}
+  .phone{grid-template-rows:1fr 58dvh}
 }
 .toggle-wrap{position:absolute;top:16px;left:16px;z-index:10}
 .tog{width:64px;height:32px;border-radius:16px;background:var(--ttrack);cursor:pointer;position:relative;border:none;outline:none;padding:0;transition:background .3s;box-shadow:inset 0 2px 5px rgba(0,0,0,.28)}
@@ -108,8 +108,8 @@ html,body{height:100%;width:100%;overflow:hidden;background:var(--bg);transition
 .pop{animation:pop .22s cubic-bezier(.34,1.56,.64,1) both}
 @keyframes shake{0%,100%{transform:translateX(0) scale(1)}25%{transform:translateX(-8px) scale(1.02)}75%{transform:translateX(8px) scale(1.02)}}
 .shake{animation:shake .32s ease}
-.btn-area{padding:6px 12px env(safe-area-inset-bottom,16px);height:100%;box-sizing:border-box;display:flex;flex-direction:column}
-.btn-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:7px;width:100%}
+.btn-area{padding:4px 10px env(safe-area-inset-bottom,12px);height:100%;box-sizing:border-box;display:flex;flex-direction:column}
+.btn-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:4px;width:100%}
 .btn{border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;outline:none;user-select:none;border-radius:22px;transition:box-shadow 70ms,transform 70ms,background .3s;touch-action:manipulation;font-family:'DM Sans',system-ui;-webkit-user-select:none}
 .b-dig{font-size:clamp(18px,7.4vw,32px);font-weight:700;color:var(--ink);border-radius:18px;background:linear-gradient(155deg,var(--face-hi),var(--face),var(--face-lo));box-shadow:0 5px 0 var(--sh-d),0 7px 14px rgba(0,0,0,.22),inset 0 1px 0 var(--sh-u)}
 .b-dig.dn{transform:translateY(4px);background:linear-gradient(155deg,var(--face-lo),var(--face));box-shadow:0 1px 0 var(--sh-d),inset 0 2px 6px rgba(0,0,0,.2)}
@@ -869,7 +869,7 @@ function getBtnRadius(cls,cs,rs){
 /* ── BUILD CALCULATOR ── */
 // Row height in px (computed once from viewport, capped at 56px for desktop)
 var CALC_ROW_H = 0;
-var CALC_GAP   = 7;
+var CALC_GAP   = 4;
 
 function getRowH(){
   // Font-size estimate only — layout driven by CSS 60dvh
