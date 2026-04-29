@@ -667,6 +667,24 @@ var EXTRA=[
   {act:'pi',     lbl:'π',   name:'Pi',            desc:'π = 3.14159…'},
 ];
 
+/* Core buttons that can be removed and need to be re-addable */
+var CORE=[
+  {act:'clear',lbl:'C',   cls:'b-act', name:'Clear',    desc:'Reset / clear all'},
+  {act:'del',  lbl:'⌫', cls:'b-act', name:'Delete',   desc:'Delete last digit / undo'},
+  {act:'op',   lbl:'+',   cls:'b-op',  name:'Operator', desc:'Main operator (+−×÷)'},
+  {act:'eq',   lbl:'=',   cls:'b-eq',  name:'Equals',   desc:'Calculate result'},
+  {act:'d0',   lbl:'0',   cls:'b-zero',name:'Zero',     desc:'Digit 0'},
+  {act:'d1',   lbl:'1',   cls:'b-dig', name:'One',      desc:'Digit 1'},
+  {act:'d2',   lbl:'2',   cls:'b-dig', name:'Two',      desc:'Digit 2'},
+  {act:'d3',   lbl:'3',   cls:'b-dig', name:'Three',    desc:'Digit 3'},
+  {act:'d4',   lbl:'4',   cls:'b-dig', name:'Four',     desc:'Digit 4'},
+  {act:'d5',   lbl:'5',   cls:'b-dig', name:'Five',     desc:'Digit 5'},
+  {act:'d6',   lbl:'6',   cls:'b-dig', name:'Six',      desc:'Digit 6'},
+  {act:'d7',   lbl:'7',   cls:'b-dig', name:'Seven',    desc:'Digit 7'},
+  {act:'d8',   lbl:'8',   cls:'b-dig', name:'Eight',    desc:'Digit 8'},
+  {act:'d9',   lbl:'9',   cls:'b-dig', name:'Nine',     desc:'Digit 9'},
+];
+
 var DEF_LAYOUT=[
   {id:'c',  lbl:'C',  cls:'b-act', act:'clear',col:1,row:1,cs:2,rs:1},
   {id:'del',lbl:'⌫', cls:'b-act', act:'del',  col:3,row:1,cs:2,rs:1},
@@ -1454,8 +1472,8 @@ function onResizeMove(e){
   if(newCs===IA.curCs&&newRs===IA.curRs)return;
   IA.curCs=newCs;IA.curRs=newRs;
 
-  // Try layout with new size — NO auto-shrink for resize (only push)
-  var newLayout=tryLayout(leWork,IA.id,b.col,b.row,newCs,newRs,true);
+  // Allow auto-shrink during resize so full grids can still be resized
+  var newLayout=tryLayout(leWork,IA.id,b.col,b.row,newCs,newRs,false);
   if(newLayout){
     IA.lastValidLayout=newLayout;
     // Instant update for the button being resized (no transition delay)
@@ -1652,6 +1670,56 @@ function openAddPanel(){
     row.appendChild(ico);row.appendChild(txt);row.appendChild(btn);
     sc.appendChild(row);
   });
+
+  // ── Section: Removed Core Buttons ──
+  var removedCore=CORE.filter(function(def){return inL.indexOf(def.act)<0;});
+  if(removedCore.length){
+    var sec3=document.createElement('div');
+    sec3.style.cssText='font-size:clamp(9px,3vw,12px);color:var(--ink-dim);letter-spacing:.1em;text-transform:uppercase;padding:14px 4px 6px;font-family:"DM Sans",sans-serif;';
+    sec3.textContent='Removed Core Buttons';
+    sc.appendChild(sec3);
+
+    removedCore.forEach(function(def){
+      var row=document.createElement('div');row.className='le-ap-row';
+      var ico=document.createElement('div');ico.className='le-ap-ico';
+      ico.textContent=def.act==='op'?cfg.mainOp:def.lbl;
+      // Match icon style to button type
+      if(def.cls==='b-op')ico.style.background='linear-gradient(135deg,var(--pbg1),var(--pbg2))',ico.style.color='var(--pink)';
+      else if(def.cls==='b-eq')ico.style.background='linear-gradient(135deg,var(--ebg1),var(--ebg2))',ico.style.color='var(--eink)';
+      var txt=document.createElement('div');txt.style.flex='1';
+      txt.innerHTML='<div class="le-ap-nm">'+def.name+'</div><div class="le-ap-ds">'+def.desc+'</div>';
+      var btn=document.createElement('button');btn.className='le-ap-add';
+      btn.style.background='var(--acc)';
+
+      if(!hasBlankSlots&&!freeSlots.length){
+        btn.textContent='Add Row ↑';btn.style.background='var(--ink-faint)';btn.style.fontSize='3.5vw';
+        btn.addEventListener('click',function(){
+          var newRow2=maxRow(leWork)+1;
+          for(var c=1;c<=COLS;c++){
+            leWork.push({id:'blank-'+newRow2+'-'+c+'-'+Date.now(),lbl:'',cls:'b-blank',act:'blank',col:c,row:newRow2,cs:1,rs:1});
+          }
+          var blankSlot=leWork.find(function(b){return b.act==='blank';});
+          if(blankSlot){blankSlot.id='core-'+def.act+'-'+Date.now();blankSlot.lbl=def.lbl;blankSlot.cls=def.cls;blankSlot.act=def.act;}
+          buildEditorDOM();openAddPanel();vibe(8);showToast('Row added & '+def.name+' placed');
+        });
+      } else {
+        btn.textContent='Add';
+        btn.addEventListener('click',function(){
+          var blankSlot=leWork.find(function(b){return b.act==='blank';});
+          if(blankSlot){
+            blankSlot.id='core-'+def.act+'-'+Date.now();
+            blankSlot.lbl=def.lbl;blankSlot.cls=def.cls;blankSlot.act=def.act;
+          } else if(freeSlots.length){
+            var fs=freeSlots[0];
+            leWork.push({id:'core-'+def.act+'-'+Date.now(),lbl:def.lbl,cls:def.cls,act:def.act,col:fs.c,row:fs.r,cs:1,rs:1});
+          }
+          buildEditorDOM();openAddPanel();vibe(8);showToast('Added: '+def.name);
+        });
+      }
+      row.appendChild(ico);row.appendChild(txt);row.appendChild(btn);
+      sc.appendChild(row);
+    });
+  }
 
   document.getElementById('leAp').classList.add('open');
 }
