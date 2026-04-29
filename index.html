@@ -1100,13 +1100,25 @@ function _tryLayoutInner(layout,btnId,targetCol,targetRow,cs,rs,rowBound,shrinkD
   if(!btn)return null;
   var movedBtn=Object.assign({},btn,{col:targetCol,row:targetRow,cs:cs,rs:rs});
   var others=layout.filter(function(b){return b.id!==btnId;});
-  var displaced=others.filter(function(b){return overlaps(movedBtn,b);});
+
+  /* ── Blanks are transparent free-space: split real vs blank buttons ── */
+  var realOthers=others.filter(function(b){return b.act!=='blank';});
+  var blankOthers=others.filter(function(b){return b.act==='blank';});
+
+  /* Real buttons displaced by the resized/moved button */
+  var displaced=realOthers.filter(function(b){return overlaps(movedBtn,b);});
+  /* Blank slots overlapping movedBtn are simply consumed (removed) */
+  var survivingBlanks=blankOthers.filter(function(b){return!overlaps(movedBtn,b);});
 
   if(!displaced.length){
-    return others.map(function(b){return Object.assign({},b);}).concat([movedBtn]);
+    return realOthers.map(function(b){return Object.assign({},b);})
+      .concat(survivingBlanks)
+      .concat([movedBtn]);
   }
 
-  var stable=others.filter(function(b){return!displaced.find(function(d){return d.id===b.id;});});
+  var stable=realOthers.filter(function(b){return!displaced.find(function(d){return d.id===b.id;});});
+
+  /* Occupancy map counts ONLY real stable buttons — blanks are free space */
   var occupancy={};
   stable.forEach(function(b){
     for(var c=b.col;c<b.col+b.cs;c++)
@@ -1118,11 +1130,11 @@ function _tryLayoutInner(layout,btnId,targetCol,targetRow,cs,rs,rowBound,shrinkD
       occupancy[c+','+r]=movedBtn.id;
 
   var newPos=[];
-  var failed=false;
+  var failedBtn=null;
   for(var i=0;i<displaced.length;i++){
     var d=displaced[i];
-    var free=nearestFree(d,occupancy,rowBound); // bounded
-    if(!free){failed=true;break;}
+    var free=nearestFree(d,occupancy,rowBound); // blanks not in occupancy → free cells
+    if(!free){failedBtn=d;break;}
     var placed=Object.assign({},d,{col:free.col,row:free.row});
     newPos.push(placed);
     for(var c=placed.col;c<placed.col+placed.cs;c++)
@@ -1130,18 +1142,30 @@ function _tryLayoutInner(layout,btnId,targetCol,targetRow,cs,rs,rowBound,shrinkD
         occupancy[c+','+r]=placed.id;
   }
 
-  if(!failed){
-    return stable.map(function(b){return Object.assign({},b);}).concat([movedBtn]).concat(newPos);
+  if(!failedBtn){
+    /* Remove blank slots now underneath any newly placed real button */
+    var finalBlanks=survivingBlanks.filter(function(bl){
+      return !newPos.find(function(np){return overlaps(bl,np);});
+    });
+    return stable.map(function(b){return Object.assign({},b);})
+      .concat(finalBlanks)
+      .concat([movedBtn])
+      .concat(newPos);
   }
 
-  // Can't fit in bounds — try shrinking largest button (max 3 times, NOT during resize)
-  if(!noShrink&&shrinkDepth<3){
-    var shrunkLayout=shrinkLargest(layout,btnId);
-    if(shrunkLayout){
+  /* Displaced REAL button can't fit — shrink only that button (not globally largest) */
+  if(!noShrink&&shrinkDepth<3&&(failedBtn.cs*failedBtn.rs)>1){
+    var shrunkLayout=JSON.parse(JSON.stringify(layout));
+    var shrunkTarget=shrunkLayout.find(function(b){return b.id===failedBtn.id;});
+    if(shrunkTarget){
+      if(shrunkTarget.cs>=shrunkTarget.rs&&shrunkTarget.cs>1) shrunkTarget.cs--;
+      else if(shrunkTarget.rs>1) shrunkTarget.rs--;
+      if(shrunkTarget.cs<1)shrunkTarget.cs=1;
+      if(shrunkTarget.rs<1)shrunkTarget.rs=1;
       return _tryLayoutInner(shrunkLayout,btnId,targetCol,targetRow,cs,rs,rowBound,shrinkDepth+1,noShrink);
     }
   }
-  return null; // truly impossible
+  return null;
 }
 
 /* ══════════════════════════════
