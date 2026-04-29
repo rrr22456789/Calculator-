@@ -150,11 +150,8 @@ html,body{height:100%;width:100%;overflow:hidden;background:var(--bg);transition
 /* Grid container */
 .le-grid{
   position:relative;
-  margin:0 auto;
-  margin-top:8px;
-  /* Cap editor width on desktop — same as phone-wrap */
-  max-width:406px; /* 430px - 2×12px side padding */
-  padding:0 12px;
+  margin:8px 12px 0;
+  width:calc(100% - 24px);
 }
 
 /* Ghost background cells */
@@ -168,14 +165,22 @@ html,body{height:100%;width:100%;overflow:hidden;background:var(--bg);transition
   display:flex;align-items:center;justify-content:center;
   border-radius:16px;font-family:'DM Sans',sans-serif;font-weight:700;
   cursor:pointer;user-select:none;touch-action:none;-webkit-user-select:none;
-  /* smooth transitions for non-dragged buttons being pushed */
-  transition:left .18s cubic-bezier(.34,1.1,.64,1),
-             top  .18s cubic-bezier(.34,1.1,.64,1),
-             width  .18s cubic-bezier(.34,1.1,.64,1),
-             height .18s cubic-bezier(.34,1.1,.64,1),
-             opacity .15s,box-shadow .15s;
+  /* Spring physics transitions for pushed/released buttons */
+  transition:
+    left   .28s cubic-bezier(.34,1.26,.64,1),
+    top    .28s cubic-bezier(.34,1.26,.64,1),
+    width  .28s cubic-bezier(.34,1.26,.64,1),
+    height .28s cubic-bezier(.34,1.26,.64,1),
+    opacity .15s ease,
+    box-shadow .15s ease;
   overflow:visible;
   will-change:left,top,width,height;
+  transform:translateZ(0); /* GPU layer */
+  backface-visibility:hidden;
+}
+/* During drag/resize — NO transitions on the moving button */
+.le-b.no-trans{
+  transition:none !important;
 }
 /* Selected: iOS-style outline border — light buttons=blue, dark buttons=white */
 .le-b.sel{z-index:20}
@@ -188,27 +193,31 @@ html,body{height:100%;width:100%;overflow:hidden;background:var(--bg);transition
 
 /* ✕ delete — top right */
 .le-del{
-  position:absolute;top:-11px;right:-11px;
-  width:23px;height:23px;border-radius:50%;
+  position:absolute;top:-12px;right:-12px;
+  width:28px;height:28px;border-radius:50%;
   background:var(--red);color:#fff;
-  font-size:11px;font-weight:900;line-height:1;
+  font-size:12px;font-weight:900;line-height:1;
   display:flex;align-items:center;justify-content:center;
   z-index:35;cursor:pointer;
   border:2.5px solid var(--le-bg);
   box-shadow:0 2px 8px rgba(0,0,0,.28);
   pointer-events:all;
+  -webkit-user-select:none;user-select:none;
 }
+.le-del *{pointer-events:none}
 .le-del:active{transform:scale(.86)}
 
 /* Resize grip — bottom right, iOS style 3 diagonal lines */
 .le-grip{
-  position:absolute;bottom:3px;right:3px;
-  width:26px;height:26px;
-  cursor:se-resize;z-index:32;
+  position:absolute;bottom:0;right:0;
+  width:36px;height:36px;
+  cursor:se-resize;z-index:35;
   display:flex;align-items:flex-end;justify-content:flex-end;
+  padding:4px;
   pointer-events:all;touch-action:none;
 }
-.le-grip-svg{width:16px;height:16px;opacity:.55}
+.le-grip *{pointer-events:none}
+.le-grip-svg{width:18px;height:18px;opacity:.6}
 
 /* Ghost — floating clone, NO transitions */
 .le-ghost{
@@ -947,10 +956,12 @@ var IA={type:null};
 /* ── Pixel helpers ── */
 function recalc(){
   var g=document.getElementById('leGrid');
-  var W=g.offsetWidth||320;
-  // Cap cell width to max 72px — keeps editor phone-sized on desktop
-  leCW=Math.min(72, Math.round((W-GAP*(COLS+1))/COLS));
-  leCH=Math.round(leCW*0.72);
+  var gW=g.offsetWidth||320;
+  var canvas=document.getElementById('leCanvas');
+  // Use full canvas width — editor fills screen on mobile
+  var W=Math.max(gW, canvas.offsetWidth-24)||320;
+  leCW=Math.round((W-GAP*(COLS+1))/COLS);
+  leCH=Math.round(leCW*0.74); // ~same aspect as real buttons
   updateLeGridOrigin();
 }
 function updateLeGridOrigin(){
@@ -969,12 +980,20 @@ function bpx(b){
   };
 }
 function ptrToCell(px_,py_,cs,rs){
-  updateLeGridOrigin(); // always fresh — canvas scroll changes this
-  var rx=px_-leGL-GAP, ry=py_-leGT-GAP;
-  var rowBound=leWork?maxRow(leWork):50;
-  var c=Math.max(1,Math.min(COLS-cs+1, Math.round(rx/(leCW+GAP))+1));
-  var r=Math.max(1,Math.min(rowBound-rs+1, Math.round(ry/(leCH+GAP))+1));
-  return{col:c,row:r};
+  updateLeGridOrigin();
+  // Offset pointer to center of ghost button for accurate snap
+  var rx = px_ - leGL - GAP;
+  var ry = py_ - leGT - GAP;
+  // Snap based on which cell the TOP-LEFT corner of the button would be in
+  // (pointer is at center of ghost, so subtract half button size)
+  var halfW = (cs * leCW + (cs-1)*GAP) / 2;
+  var halfH = (rs * leCH + (rs-1)*GAP) / 2;
+  var tlX = rx - halfW + GAP; // top-left x relative to grid
+  var tlY = ry - halfH + GAP; // top-left y relative to grid
+  var rowBound = leWork ? maxRow(leWork) : 50;
+  var c = Math.max(1, Math.min(COLS-cs+1, Math.floor(tlX/(leCW+GAP))+1));
+  var r = Math.max(1, Math.min(rowBound-rs+1, Math.floor(tlY/(leCH+GAP))+1));
+  return{col:c, row:r};
 }
 function maxRow(layout){var m=1;layout.forEach(function(b){m=Math.max(m,b.row+b.rs-1);});return m;}
 
@@ -1043,7 +1062,7 @@ function shrinkLargest(layout,excludeId){
   2. If a displaced button can't fit, shrink the largest button and retry.
   Returns new full layout if successful, null if impossible.
 */
-function tryLayout(layout,btnId,targetCol,targetRow,targetCs,targetRs){
+function tryLayout(layout,btnId,targetCol,targetRow,targetCs,targetRs,noShrink){
   var btn=layout.find(function(b){return b.id===btnId;});
   if(!btn)return null;
   var cs=targetCs!==undefined?targetCs:btn.cs;
@@ -1055,10 +1074,10 @@ function tryLayout(layout,btnId,targetCol,targetRow,targetCs,targetRs){
   targetRow=Math.max(1,Math.min(rowBound-rs+1,targetRow));
   if(targetRow<1)targetRow=1;
 
-  return _tryLayoutInner(layout,btnId,targetCol,targetRow,cs,rs,rowBound,0);
+  return _tryLayoutInner(layout,btnId,targetCol,targetRow,cs,rs,rowBound,0,noShrink);
 }
 
-function _tryLayoutInner(layout,btnId,targetCol,targetRow,cs,rs,rowBound,shrinkDepth){
+function _tryLayoutInner(layout,btnId,targetCol,targetRow,cs,rs,rowBound,shrinkDepth,noShrink){
   var btn=layout.find(function(b){return b.id===btnId;});
   if(!btn)return null;
   var movedBtn=Object.assign({},btn,{col:targetCol,row:targetRow,cs:cs,rs:rs});
@@ -1097,11 +1116,11 @@ function _tryLayoutInner(layout,btnId,targetCol,targetRow,cs,rs,rowBound,shrinkD
     return stable.map(function(b){return Object.assign({},b);}).concat([movedBtn]).concat(newPos);
   }
 
-  // Can't fit in bounds — try shrinking largest button (max 3 times)
-  if(shrinkDepth<3){
+  // Can't fit in bounds — try shrinking largest button (max 3 times, NOT during resize)
+  if(!noShrink&&shrinkDepth<3){
     var shrunkLayout=shrinkLargest(layout,btnId);
     if(shrunkLayout){
-      return _tryLayoutInner(shrunkLayout,btnId,targetCol,targetRow,cs,rs,rowBound,shrinkDepth+1);
+      return _tryLayoutInner(shrunkLayout,btnId,targetCol,targetRow,cs,rs,rowBound,shrinkDepth+1,noShrink);
     }
   }
   return null; // truly impossible
@@ -1202,7 +1221,8 @@ function createBtnEl(b){
   // Pointer handler
   el.addEventListener('pointerdown',function(e){
     var target=e.target;
-    if(target.classList.contains('le-del')||target.closest('.le-grip'))return;
+    // Let del and grip handle their own events
+    if(target.closest('.le-del')||target.closest('.le-grip'))return;
     e.preventDefault();
     if(leSel!==b.id){
       leSel=b.id;
@@ -1255,21 +1275,24 @@ function applyLayoutToDOM(layout,animatePushed,dragId){
     var el=document.getElementById('le-'+b.id);
     if(!el)return;
     var rc=bpx(b);
-    if(b.id===dragId){el.style.transition='opacity .1s';return;}
 
-    // ONLY move buttons that actually changed position/size
+    if(b.id===dragId){
+      // Dragged button: no transition, just dim
+      el.classList.add('no-trans');
+      return;
+    }
+
+    // Only move buttons that actually changed
     var curL=parseFloat(el.style.left)||0;
     var curT=parseFloat(el.style.top)||0;
     var curW=parseFloat(el.style.width)||0;
     var curH=parseFloat(el.style.height)||0;
-    var changed=Math.abs(curL-rc.x)>1||Math.abs(curT-rc.y)>1||Math.abs(curW-rc.w)>1||Math.abs(curH-rc.h)>1;
-    if(!changed)return; // skip stable buttons — no jitter
+    var changed=Math.abs(curL-rc.x)>1||Math.abs(curT-rc.y)>1||
+                Math.abs(curW-rc.w)>1||Math.abs(curH-rc.h)>1;
+    if(!changed)return;
 
-    if(animatePushed){
-      el.style.transition='left .2s cubic-bezier(.34,1.1,.64,1),top .2s cubic-bezier(.34,1.1,.64,1),width .2s cubic-bezier(.34,1.1,.64,1),height .2s cubic-bezier(.34,1.1,.64,1)';
-    } else {
-      el.style.transition='none';
-    }
+    // Pushed buttons: spring animation
+    el.classList.remove('no-trans');
     el.style.left=rc.x+'px';
     el.style.top=rc.y+'px';
     el.style.width=rc.w+'px';
@@ -1322,7 +1345,7 @@ function startMove(b,e){
     valid:true
   };
   var el=document.getElementById('le-'+b.id);
-  if(el){el.classList.add('src');el.style.transition='opacity .1s';}
+  if(el){el.classList.add('src','no-trans');}
 
   // Create ghost
   var rc=bpx(b);
@@ -1341,18 +1364,14 @@ function onMoveMove(e){
   if(IA.type!=='move')return;
   var btn=leWork.find(function(x){return x.id===IA.id;});if(!btn)return;
 
-  // Refresh grid origin on every move (canvas scroll changes it)
   updateLeGridOrigin();
 
   var gh=document.getElementById('le-ghost');
   if(gh){
     var origRc=bpx(btn);
-    // Center ghost on pointer
-    var ghostX=Math.round(e.clientX-leGL-origRc.w/2);
-    var ghostY=Math.round(e.clientY-leGT-origRc.h/2);
-    gh.style.transition='none';
-    gh.style.left=ghostX+'px';
-    gh.style.top=ghostY+'px';
+    // Ghost centered on pointer — matches ptrToCell halfW/halfH offset exactly
+    gh.style.left=Math.round(e.clientX-leGL-origRc.w/2)+'px';
+    gh.style.top =Math.round(e.clientY-leGT-origRc.h/2)+'px';
   }
 
   // Calculate snap position — ptrToCell also calls updateLeGridOrigin
@@ -1361,7 +1380,7 @@ function onMoveMove(e){
   IA.snapCol=snap.col;IA.snapRow=snap.row;
 
   // Try to build layout with button at snap position
-  var newLayout=tryLayout(leWork,IA.id,snap.col,snap.row);
+  var newLayout=tryLayout(leWork,IA.id,snap.col,snap.row,undefined,undefined,true);
   if(newLayout){
     IA.valid=true;
     IA.lastValidLayout=newLayout;
@@ -1379,7 +1398,7 @@ function onMoveEnd(){
   var gh=document.getElementById('le-ghost');if(gh)gh.remove();
   clearHL();
 
-  var el=document.getElementById('le-'+IA.id);if(el)el.classList.remove('src');
+  var el=document.getElementById('le-'+IA.id);if(el)el.classList.remove('src','no-trans');
 
   if(IA.valid&&IA.lastValidLayout){
     leWork=IA.lastValidLayout;
@@ -1411,12 +1430,14 @@ function onMoveEnd(){
    RESIZE
 ══════════════ */
 function startResize(b,e){
+  // Always get FRESH button from leWork — closure `b` may be stale after moves
+  var freshB = leWork.find(function(x){return x.id===b.id;}) || b;
   recalc();
   IA={
-    type:'resize',id:b.id,
+    type:'resize',id:freshB.id,
     startX:e.clientX,startY:e.clientY,
-    origCs:b.cs,origRs:b.rs,origCol:b.col,origRow:b.row,
-    curCs:b.cs,curRs:b.rs,
+    origCs:freshB.cs,origRs:freshB.rs,origCol:freshB.col,origRow:freshB.row,
+    curCs:freshB.cs,curRs:freshB.rs,
     origLayout:JSON.parse(JSON.stringify(leWork)),
     lastValidLayout:JSON.parse(JSON.stringify(leWork))
   };
@@ -1433,15 +1454,24 @@ function onResizeMove(e){
   if(newCs===IA.curCs&&newRs===IA.curRs)return;
   IA.curCs=newCs;IA.curRs=newRs;
 
-  // Try layout with new size
-  var newLayout=tryLayout(leWork,IA.id,b.col,b.row,newCs,newRs);
+  // Try layout with new size — NO auto-shrink for resize (only push)
+  var newLayout=tryLayout(leWork,IA.id,b.col,b.row,newCs,newRs,true);
   if(newLayout){
     IA.lastValidLayout=newLayout;
-    // Apply real-time to all buttons
-    applyLayoutToDOM(newLayout,true,null);
+    // Instant update for the button being resized (no transition delay)
+    var resEl=document.getElementById('le-'+IA.id);
+    if(resEl){
+      var resBtn=newLayout.find(function(x){return x.id===IA.id;});
+      if(resBtn){var rrc=bpx(resBtn);resEl.style.transition='none';resEl.style.width=rrc.w+'px';resEl.style.height=rrc.h+'px';resEl.style.fontSize=Math.min(rrc.w*.29,rrc.h*.41,40)+'px';}
+    }
+    applyLayoutToDOM(newLayout,true,IA.id);
     highlightCells(b.col,b.row,newCs,newRs,'ok');
   } else {
-    highlightCells(b.col,b.row,newCs,newRs,'bad');
+    // Revert to last valid size
+    b.cs=IA.curCs-Math.round((e.clientX-IA.startX)/(leCW+GAP));
+    b.rs=IA.curRs-Math.round((e.clientY-IA.startY)/(leCH+GAP));
+    if(b.cs<1)b.cs=1;if(b.rs<1)b.rs=1;
+    highlightCells(b.col,b.row,IA.curCs,IA.curRs,'bad');
   }
 }
 
@@ -1869,11 +1899,10 @@ function init(){
   document.getElementById('openLayoutBtn').addEventListener('click',function(){closeSettings();setTimeout(openLE,320);});
   document.getElementById('leCancel').addEventListener('click',closeLE_cancel);
   document.getElementById('leReset').addEventListener('click',function(){
-    if(confirm('Reset to default layout?')){
-      leWork=JSON.parse(JSON.stringify(DEF_LAYOUT));
-      renderLE();
-      showToast('Layout reset ✓');
-    }
+    leWork=JSON.parse(JSON.stringify(DEF_LAYOUT));
+    leSel=null;
+    buildEditorDOM();
+    showToast('Layout reset ✓');
   });
   document.getElementById('leDone').addEventListener('click',closeLE_done);
   document.getElementById('leFab').addEventListener('click',openAddPanel);
