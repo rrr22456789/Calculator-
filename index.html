@@ -2559,6 +2559,8 @@ function closeLE_done(){
   leWork=null;leSel=null;IA={type:null};
   closeAddPanel();
   showToast('Layout saved ✓');updateVals();
+  /* Reapply button images after layout rebuild */
+  if(typeof BtnImageMgr!=='undefined')setTimeout(function(){BtnImageMgr.applyToCalc();},40);
 }
 
 /* ── Add panel ── */
@@ -2728,6 +2730,13 @@ function openAddPanel(){
 function closeAddPanel(){document.getElementById('leAp').classList.remove('open');}
 
 window.addEventListener('resize',function(){if(document.getElementById('leOv').classList.contains('open')){buildEditorDOM();}});
+/* Close layout editor if app goes to background (prevents it reappearing on swipe-back) */
+document.addEventListener('visibilitychange',function(){
+  if(document.hidden){
+    var leOv=document.getElementById('leOv');
+    if(leOv&&leOv.classList.contains('open'))closeLE_cancel();
+  }
+});
 
 
 /* ═══════════════════════════════════════
