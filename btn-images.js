@@ -1,9 +1,7 @@
 /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-   btn-images.js  v2 — Button Image Customizer
-   Requires calc-plus_17+ (data-act on buttons +
-   afterRender hook in buildCalc & render)
+   btn-images.js  v3 — Button Image Customizer
+   Fixes: grid cut-off, images lost after layout change
    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
-
 (function (global) {
   'use strict';
 
@@ -24,19 +22,19 @@
   }
   function persist() {
     try { localStorage.setItem(STORAGE_KEY, JSON.stringify(saved)); }
-    catch (e) { console.warn('BtnImageMgr: storage full'); }
+    catch (e) { console.warn('BtnImageMgr: localStorage full'); }
   }
 
-  /* ── resize to base64 (200 px max, jpeg 0.80) ── */
+  /* ── resize to base64 max 200 px, jpeg 0.80 ── */
   function resizeToB64(file, cb) {
     var r = new FileReader();
     r.onload = function (ev) {
       var img = new Image();
       img.onload = function () {
-        var max = 200, scale = Math.min(max / img.width, max / img.height, 1);
+        var max = 200, s = Math.min(max / img.width, max / img.height, 1);
         var c = document.createElement('canvas');
-        c.width  = Math.round(img.width  * scale);
-        c.height = Math.round(img.height * scale);
+        c.width  = Math.round(img.width  * s);
+        c.height = Math.round(img.height * s);
         c.getContext('2d').drawImage(img, 0, 0, c.width, c.height);
         cb(c.toDataURL('image/jpeg', 0.80));
       };
@@ -45,16 +43,13 @@
     r.readAsDataURL(file);
   }
 
-  /* ── apply saved images to live calculator buttons ── */
+  /* ── apply saved images onto live calculator buttons ── */
   function applyToCalc() {
     ELIGIBLE.forEach(function (act) {
       var btn = document.querySelector('[data-act="' + act + '"]');
       if (!btn) return;
-
-      /* remove existing overlay */
       var old = btn.querySelector('.bim-img');
       if (old) old.remove();
-
       if (saved[act]) {
         btn.classList.add('bim-active');
         var img = document.createElement('img');
@@ -67,92 +62,101 @@
     });
   }
 
-  /* ── inject CSS once ── */
+  /* ── CSS injected once ── */
   function injectCSS() {
     if (document.getElementById('bim-css')) return;
     var s = document.createElement('style');
     s.id = 'bim-css';
     s.textContent = [
       /* backdrop */
-      '.bim-bg{position:fixed;inset:0;z-index:9998;background:rgba(0,0,0,.6);display:flex;align-items:flex-end;justify-content:center;backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px)}',
+      '.bim-bg{position:fixed;inset:0;z-index:9998;background:rgba(0,0,0,.62);display:flex;align-items:flex-end;justify-content:center;backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px)}',
 
       /* bottom sheet */
-      '.bim-sheet{width:100%;max-width:500px;background:var(--face);border-radius:28px 28px 0 0;padding-bottom:calc(env(safe-area-inset-bottom,0px) + 12px);max-height:92vh;display:flex;flex-direction:column;overflow:hidden;box-shadow:0 -12px 48px rgba(0,0,0,.45)}',
+      '.bim-sheet{width:100%;max-width:500px;background:var(--face);border-radius:28px 28px 0 0;padding-bottom:calc(env(safe-area-inset-bottom,0px) + 8px);max-height:90vh;display:flex;flex-direction:column;overflow:hidden;box-shadow:0 -12px 48px rgba(0,0,0,.45)}',
 
       /* header */
       '.bim-hdr{display:flex;align-items:center;justify-content:space-between;padding:16px 18px 8px;flex-shrink:0}',
-      '.bim-ttl{font-family:"DM Sans",sans-serif;font-size:clamp(16px,5vw,19px);font-weight:700;color:var(--ink)}',
-      '.bim-hdr-x{background:var(--ssec);border:none;width:30px;height:30px;border-radius:50%;cursor:pointer;font-size:15px;color:var(--ink-dim);display:flex;align-items:center;justify-content:center;flex-shrink:0;font-weight:700}',
+      '.bim-ttl{font-family:"DM Sans",sans-serif;font-size:clamp(15px,5vw,18px);font-weight:700;color:var(--ink)}',
+      '.bim-hdr-x{background:var(--ssec);border:none;width:30px;height:30px;border-radius:50%;cursor:pointer;font-size:15px;color:var(--ink-dim);display:flex;align-items:center;justify-content:center;font-weight:700;flex-shrink:0}',
 
       /* hint */
-      '.bim-hint{padding:0 18px 10px;font-family:"DM Sans",sans-serif;font-size:clamp(11px,3.6vw,13px);color:var(--ink-dim);line-height:1.5;flex-shrink:0}',
+      '.bim-hint{padding:0 18px 8px;font-family:"DM Sans",sans-serif;font-size:clamp(11px,3.4vw,13px);color:var(--ink-dim);line-height:1.5;flex-shrink:0}',
 
-      /* scrollable area */
-      '.bim-scroll{flex:1;overflow-y:auto;overflow-x:hidden;padding:4px 12px 10px;-webkit-overflow-scrolling:touch;scrollbar-width:none}',
+      /* scrollable area — clips to sheet width */
+      '.bim-scroll{flex:1;overflow-y:auto;overflow-x:hidden;padding:4px 10px 6px;-webkit-overflow-scrolling:touch;scrollbar-width:none;box-sizing:border-box}',
       '.bim-scroll::-webkit-scrollbar{display:none}',
 
-      /* mirrored grid */
-      '.bim-grid{display:grid;gap:7px;width:100%}',
+      /* ── GRID: always 4 equal columns, full sheet width ── */
+      /* FIX: never copy px values from srcGrid — use fr units */
+      '.bim-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;width:100%;box-sizing:border-box}',
 
       /* cells */
-      '.bim-cell{min-height:52px;border-radius:16px;display:flex;align-items:center;justify-content:center;position:relative;overflow:hidden;cursor:pointer;transition:transform .13s}',
+      '.bim-cell{border-radius:14px;display:flex;align-items:center;justify-content:center;position:relative;overflow:hidden;cursor:pointer;transition:transform .13s;box-sizing:border-box}',
       '.bim-cell:active{transform:scale(.91)}',
-      '.bim-cell.bim-locked{cursor:default;opacity:.3;pointer-events:none}',
+      '.bim-cell.bim-locked{cursor:default;opacity:.28;pointer-events:none}',
 
-      /* cell types — match calculator look */
+      /* match calculator button look */
       '.bim-cell.bim-dig{background:var(--ssec);box-shadow:0 3px 0 var(--sh-d),inset 0 1px 0 var(--sh-u)}',
       '.bim-cell.bim-op{background:linear-gradient(140deg,var(--pbg1),var(--pbg2));box-shadow:0 3px 0 var(--psh)}',
       '.bim-cell.bim-eq{background:linear-gradient(140deg,var(--ebg1),var(--ebg2));box-shadow:0 3px 0 var(--esh)}',
       '.bim-cell.bim-act{background:var(--face-lo);box-shadow:0 3px 0 var(--sh-d)}',
 
       /* label */
-      '.bim-cell-lbl{font-family:"DM Sans",sans-serif;font-weight:700;font-size:clamp(16px,6vw,26px);color:var(--ink);pointer-events:none;line-height:1;user-select:none}',
+      '.bim-cell-lbl{font-family:"DM Sans",sans-serif;font-weight:700;font-size:clamp(14px,5.5vw,24px);color:var(--ink);pointer-events:none;line-height:1;user-select:none}',
       '.bim-cell.bim-op .bim-cell-lbl,.bim-cell.bim-eq .bim-cell-lbl{color:#fff}',
 
-      /* camera badge */
-      '.bim-cam{position:absolute;bottom:4px;right:5px;font-size:10px;opacity:.55;pointer-events:none;line-height:1}',
+      /* camera icon */
+      '.bim-cam{position:absolute;bottom:3px;right:4px;font-size:9px;opacity:.5;pointer-events:none;line-height:1}',
 
       /* thumbnail */
       '.bim-thumb{width:100%;height:100%;object-fit:cover;display:block;position:absolute;inset:0;border-radius:inherit}',
 
-      /* remove badge */
-      '.bim-rm{position:absolute;top:4px;right:4px;width:22px;height:22px;border-radius:50%;background:rgba(200,30,30,.92);border:none;color:#fff;font-size:14px;font-weight:900;cursor:pointer;z-index:8;display:flex;align-items:center;justify-content:center;line-height:1;box-shadow:0 1px 4px rgba(0,0,0,.4)}',
-      '.bim-rm:active{transform:scale(.84)}',
+      /* remove × */
+      '.bim-rm{position:absolute;top:3px;right:3px;width:20px;height:20px;border-radius:50%;background:rgba(200,30,30,.92);border:none;color:#fff;font-size:13px;font-weight:900;cursor:pointer;z-index:8;display:flex;align-items:center;justify-content:center;line-height:1;box-shadow:0 1px 4px rgba(0,0,0,.4)}',
+      '.bim-rm:active{transform:scale(.82)}',
 
       /* action bar */
-      '.bim-bar{display:grid;grid-template-columns:1fr 1fr;grid-template-rows:auto auto;gap:8px;padding:12px 14px 8px;flex-shrink:0;border-top:1px solid var(--sbrd)}',
+      '.bim-bar{padding:10px 12px 6px;flex-shrink:0;border-top:1px solid var(--sbrd);display:flex;flex-direction:column;gap:8px}',
+      '.bim-bar-row{display:grid;grid-template-columns:1fr 1fr;gap:8px}',
       '.bim-btn{height:46px;border:none;border-radius:14px;font-family:"DM Sans",sans-serif;font-size:clamp(13px,4.5vw,16px);font-weight:700;cursor:pointer;transition:opacity .15s,transform .12s;width:100%}',
       '.bim-btn:active{opacity:.72;transform:scale(.97)}',
       '.bim-ok{background:var(--acc);color:#fff}',
       '.bim-cancel{background:var(--ssec);color:var(--ink)}',
-      '.bim-rmall{grid-column:1/-1;background:transparent;color:var(--red);border:1.5px solid var(--red)!important;height:40px}',
-
+      '.bim-rmall{background:transparent;color:var(--red);border:1.5px solid var(--red);height:40px}',
     ].join('');
     document.head.appendChild(s);
   }
 
-  /* ── mirror the live calculator grid in the editor ── */
+  /* ─────────────────────────────────────────────────
+     buildEditorGrid
+     Mirrors the LIVE calculator grid exactly.
+     FIX P1: uses repeat(4,1fr) — NOT copied px values.
+     FIX: grid-auto-rows calculated from sheet width.
+  ───────────────────────────────────────────────── */
   function buildEditorGrid(container) {
     container.innerHTML = '';
 
     var srcGrid = document.getElementById('btnGrid');
     if (!srcGrid) {
-      container.style.padding = '20px';
-      container.textContent = 'Calculator grid not found.';
+      container.textContent = 'Calculator not found.';
       return;
     }
 
-    /* copy column template from live grid */
-    var computed = window.getComputedStyle(srcGrid);
-    container.style.gridTemplateColumns = computed.gridTemplateColumns;
-    container.style.gridAutoRows = 'clamp(48px,13vw,64px)';
+    /* Row height: compute from available sheet width */
+    var sheetWidth = container.parentElement
+      ? container.parentElement.offsetWidth || window.innerWidth
+      : window.innerWidth;
+    var cellW = Math.floor((sheetWidth - 20 - 6 * 3) / 4); /* 4 cols, gap 6, pad 10 each side */
+    var cellH = Math.min(Math.max(cellW * 0.78, 46), 68);   /* aspect ~0.78, clamp 46-68 */
+
+    container.style.gridAutoRows = cellH + 'px';
 
     var srcBtns = srcGrid.querySelectorAll('.btn');
     srcBtns.forEach(function (srcBtn) {
       var act    = srcBtn.dataset.act || '';
       var isElig = ELIGIBLE.indexOf(act) !== -1;
 
-      /* visual type */
+      /* visual type — mirror the real button class */
       var typeClass = 'bim-act';
       if (srcBtn.classList.contains('b-dig') || srcBtn.classList.contains('b-zero'))
         typeClass = 'bim-dig';
@@ -163,17 +167,20 @@
 
       var cell = document.createElement('div');
       cell.className = 'bim-cell ' + typeClass + (!isElig ? ' bim-locked' : '');
+
+      /* copy exact grid placement from the real button */
       cell.style.gridColumn   = srcBtn.style.gridColumn;
       cell.style.gridRow      = srcBtn.style.gridRow;
-      cell.style.borderRadius = srcBtn.style.borderRadius || '16px';
+      cell.style.borderRadius = srcBtn.style.borderRadius || '14px';
 
       if (isElig && pending[act]) {
-        /* thumbnail + remove button */
+        /* thumbnail */
         var thumb = document.createElement('img');
         thumb.className = 'bim-thumb';
         thumb.src = pending[act];
         cell.appendChild(thumb);
 
+        /* remove badge */
         var rm = document.createElement('button');
         rm.className = 'bim-rm';
         rm.textContent = '×';
@@ -214,7 +221,7 @@
   function openEditor() {
     injectCSS();
 
-    /* file input — created once */
+    /* file input — once */
     if (!fileInput) {
       fileInput = document.createElement('input');
       fileInput.type   = 'file';
@@ -234,7 +241,7 @@
       document.body.appendChild(fileInput);
     }
 
-    /* fresh pending copy each open */
+    /* fresh pending copy */
     pending = JSON.parse(JSON.stringify(saved));
 
     /* build overlay once */
@@ -256,7 +263,7 @@
       /* hint */
       var hint = document.createElement('p');
       hint.className = 'bim-hint';
-      hint.innerHTML = 'Tap a <b>number or operator</b> to set its image. Tap <b>×</b> on a thumbnail to remove it. Press <b>OK</b> to save all changes.';
+      hint.innerHTML = 'Tap a <b>digit or operator</b> to set its image. Tap <b>×</b> to remove. Press <b>OK</b> to save.';
       sheet.appendChild(hint);
 
       /* scrollable grid */
@@ -271,6 +278,9 @@
       var bar = document.createElement('div');
       bar.className = 'bim-bar';
 
+      var row = document.createElement('div');
+      row.className = 'bim-bar-row';
+
       var btnCancel = document.createElement('button');
       btnCancel.className = 'bim-btn bim-cancel';
       btnCancel.textContent = 'Cancel';
@@ -283,8 +293,9 @@
       btnRmAll.className = 'bim-btn bim-rmall';
       btnRmAll.textContent = '🗑  Remove All Images';
 
-      bar.appendChild(btnCancel);
-      bar.appendChild(btnOK);
+      row.appendChild(btnCancel);
+      row.appendChild(btnOK);
+      bar.appendChild(row);
       bar.appendChild(btnRmAll);
       sheet.appendChild(bar);
       editorEl.appendChild(sheet);
@@ -295,24 +306,20 @@
       editorEl.addEventListener('click', function (e) {
         if (e.target === editorEl) closeEditor();
       });
-
       btnCancel.addEventListener('click', closeEditor);
-
       btnOK.addEventListener('click', function () {
         saved = JSON.parse(JSON.stringify(pending));
         persist();
         applyToCalc();
         closeEditor();
       });
-
       btnRmAll.addEventListener('click', function () {
         pending = {};
-        var g = editorEl.querySelector('.bim-grid');
-        if (g) buildEditorGrid(g);
+        buildEditorGrid(editorEl.querySelector('.bim-grid'));
       });
     }
 
-    /* refresh grid every open */
+    /* rebuild grid fresh each open */
     buildEditorGrid(editorEl.querySelector('.bim-grid'));
     editorEl.style.display = 'flex';
     document.body.style.overflow = 'hidden';
@@ -325,14 +332,34 @@
     curAct  = null;
   }
 
-  /* ── init ── */
+  /* ─────────────────────────────────────────────────
+     init
+     FIX P3: MutationObserver watches #btnGrid so
+     images reapply whenever layout is rebuilt —
+     independent of afterRender timing.
+  ───────────────────────────────────────────────── */
   function init() {
     load();
+
+    /* afterRender hook */
     var prev = global.afterRender;
     global.afterRender = function () {
       if (typeof prev === 'function') prev();
       applyToCalc();
     };
+
+    /* MutationObserver — catches buildCalc() rebuilds */
+    var grid = document.getElementById('btnGrid');
+    if (grid && window.MutationObserver) {
+      var observer = new MutationObserver(function () {
+        /* small delay so all buttons are in DOM before we query them */
+        clearTimeout(observer._t);
+        observer._t = setTimeout(applyToCalc, 30);
+      });
+      observer.observe(grid, { childList: true });
+    }
+
+    /* first apply */
     applyToCalc();
   }
 
