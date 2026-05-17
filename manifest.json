@@ -1,17 +1,39 @@
 {
   "name": "Calc+",
   "short_name": "Calc+",
-  "description": "Simple adding calculator",
-  "start_url": ".",
+  "description": "Feature-rich calculator with multiple modes, themes and sounds",
+  "start_url": "./index.html",
+  "scope": "./",
   "display": "standalone",
+  "orientation": "portrait",
   "background_color": "#dedad6",
   "theme_color": "#dedad6",
-  "orientation": "portrait",
+  "lang": "en",
+  "categories": ["utilities", "productivity"],
   "icons": [
-    { "src": "icons/icon-32.png",  "sizes": "32x32",   "type": "image/png" },
-    { "src": "icon-152.png", "sizes": "152x152", "type": "image/png" },
-    { "src": "icons/icon-180.png", "sizes": "180x180", "type": "image/png" },
-    { "src": "icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any maskable" },
-    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
+    {
+      "src": "icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "maskable"
+    },
+    {
+      "src": "icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
   ]
 }
