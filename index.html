@@ -2737,6 +2737,10 @@ document.addEventListener('visibilitychange',function(){
     if(leOv&&leOv.classList.contains('open'))closeLE_cancel();
   }
 });
+window.addEventListener('pagehide',function(){
+  var leOv=document.getElementById('leOv');
+  if(leOv&&leOv.classList.contains('open'))closeLE_cancel();
+});
 
 
 /* ═══════════════════════════════════════
