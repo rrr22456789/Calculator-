@@ -639,6 +639,10 @@ html,body{height:100%;width:100%;overflow:hidden;background:var(--bg);transition
 .unit-dd-item:active{background:var(--face-hi)}
 .unit-dd-item.sel{color:var(--acc);font-weight:700;background:var(--face-hi)}
 
+/* ── BUTTON IMAGE OVERLAY ── */
+.bim-active{box-shadow:none!important;background:transparent!important;border:none!important;position:relative!important;overflow:hidden!important}
+.bim-active .bim-img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;border-radius:inherit;z-index:5;pointer-events:none;display:block}
+
 /* ── COLOUR THEME SWATCHES ── */
 .theme-swatches{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;padding:12px 16px}
 .theme-sw{display:flex;flex-direction:column;align-items:center;gap:5px;cursor:pointer;padding:8px;border-radius:14px;border:2px solid transparent;transition:border-color .28s ease,transform .2s ease}
@@ -1918,8 +1922,10 @@ function buildCalc(){
     el.addEventListener('pointerup',  function(){el.classList.remove('dn');});
     el.addEventListener('pointerleave',function(){el.classList.remove('dn');});
     el.addEventListener('pointercancel',function(){el.classList.remove('dn');});
+    el.dataset.act=b.act;
     g.appendChild(el);
   });
+  if(typeof window.afterRender==='function')window.afterRender();
 }
 
 /* ══════════════════════════════════════════════════════════
