@@ -1126,6 +1126,9 @@ function getLayout(){
   if(!hasMultiOp){cfg.layout=JSON.parse(JSON.stringify(DEF_LAYOUT));saveCfg();}
   return cfg.layout;
 }
+/* Expose for external scripts (btn-images.js) */
+window._calcGetLayout  = function(){ return getLayout(); };
+window._calcDEFLayout  = function(){ return DEF_LAYOUT;  };
 function loadCfg(){
   try{
     var s=localStorage.getItem('calcpx4');
