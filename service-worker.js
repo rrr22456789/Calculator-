@@ -1,90 +1,77 @@
-/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-   service-worker.js — Calc+ PWA Service Worker
-   Bump CACHE_VER when you deploy a new version
-   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   service-worker.js — Calc+ PWA Service Worker v5
 
-var CACHE_VER  = 'calcplus-v4';
-var CACHE_CORE = [
-  './',
-  './index.html',
-  './btn-images.js',
-  './menifest.json',
-  './icon-192.png',
-  './icon-512.png',
-  './click.mp3',
-  './switch.mp3'
-];
+   KEY FIX: cache.addAll() fails the ENTIRE install
+   if even ONE file is 404. This was breaking PWA.
+   Now we cache files one-by-one, skipping missing ones.
+   SW always installs → Chrome shows Install, not Shortcut.
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
 
-/* ── INSTALL: cache all core assets ── */
+var CACHE_VER = 'calcplus-v5';
+
+/* Critical — must succeed */
+var CACHE_MUST = ['./index.html'];
+
+/* Optional — silently skipped if missing */
+var CACHE_OPT  = ['./', './btn-images.js', './menifest.json',
+                  './icon-192.png', './icon-512.png',
+                  './click.mp3', './switch.mp3'];
+
+/* ── INSTALL ── */
 self.addEventListener('install', function (e) {
   e.waitUntil(
-    caches.open(CACHE_VER).then(function (cache) {
-      return cache.addAll(CACHE_CORE);
-    }).then(function () {
-      /* Activate immediately without waiting for old tabs to close */
-      return self.skipWaiting();
-    })
+    caches.open(CACHE_VER)
+      .then(function (cache) {
+        /* Cache critical file first */
+        return cache.addAll(CACHE_MUST).then(function () {
+          /* Cache optional files one-by-one, ignore any 404 */
+          return Promise.all(
+            CACHE_OPT.map(function (url) {
+              return cache.add(url).catch(function () {});
+            })
+          );
+        });
+      })
+      .then(function () { return self.skipWaiting(); })
   );
 });
 
 /* ── ACTIVATE: delete old caches ── */
 self.addEventListener('activate', function (e) {
   e.waitUntil(
-    caches.keys().then(function (keys) {
-      return Promise.all(
-        keys
-          .filter(function (k) { return k !== CACHE_VER; })
-          .map(function (k) { return caches.delete(k); })
-      );
-    }).then(function () {
-      /* Take control of all open clients immediately */
-      return self.clients.claim();
-    })
+    caches.keys()
+      .then(function (keys) {
+        return Promise.all(
+          keys.filter(function (k) { return k !== CACHE_VER; })
+              .map(function (k)   { return caches.delete(k); })
+        );
+      })
+      .then(function () { return self.clients.claim(); })
   );
 });
 
-/* ── FETCH: cache-first for core assets, network-first for rest ── */
+/* ── FETCH: cache-first with background network refresh ── */
 self.addEventListener('fetch', function (e) {
-  /* Only handle GET requests */
   if (e.request.method !== 'GET') return;
-
-  /* Skip cross-origin requests (e.g. Google Fonts) */
-  var url = new URL(e.request.url);
-  if (url.origin !== location.origin) {
-    /* For Google Fonts — network with no-cors fallback */
-    e.respondWith(fetch(e.request).catch(function () {
-      return new Response('', { status: 408 });
-    }));
-    return;
-  }
+  if (!e.request.url.startsWith(self.location.origin)) return;
 
   e.respondWith(
     caches.open(CACHE_VER).then(function (cache) {
       return cache.match(e.request).then(function (cached) {
-        if (cached) {
-          /* Serve from cache, refresh in background */
-          fetch(e.request).then(function (fresh) {
-            if (fresh && fresh.status === 200) {
-              cache.put(e.request, fresh.clone());
-            }
-          }).catch(function () {});
-          return cached;
-        }
 
-        /* Not in cache — fetch from network and cache it */
-        return fetch(e.request).then(function (response) {
-          if (response && response.status === 200) {
-            cache.put(e.request, response.clone());
+        var networkFetch = fetch(e.request).then(function (res) {
+          if (res && res.status === 200 && res.type !== 'opaque') {
+            cache.put(e.request, res.clone());
           }
-          return response;
+          return res;
         }).catch(function () {
-          /* Offline fallback for HTML pages */
-          if (e.request.headers.get('accept') &&
-              e.request.headers.get('accept').indexOf('text/html') >= 0) {
+          if (e.request.mode === 'navigate') {
             return caches.match('./index.html');
           }
-          return new Response('Offline', { status: 503 });
+          return new Response('', { status: 503 });
         });
+
+        return cached || networkFetch;
       });
     })
   );
