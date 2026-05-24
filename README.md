@@ -3,7 +3,69 @@
 > A feature-rich, PWA-ready calculator built as a single HTML file — with multiple modes, custom themes, sound packs, and deep personalization.
 
 <br>
+<h1 align="center">🧮 Modern Calculator</h1>
 
+<p align="center">
+  A clean, responsive and modern calculator built using HTML, CSS and JavaScript.
+</p>
+
+<p align="center">
+  
+  <a href="https://rrr22456789.github.io/Calculator-/">
+    <img src="https://img.shields.io/badge/🚀_Live_Demo-Open-blue?style=for-the-badge">
+  </a>
+
+  <a href="https://github.com/rrr22456789/Calculator-">
+    <img src="https://img.shields.io/badge/GitHub-Repository-black?style=for-the-badge&logo=github">
+  </a>
+
+  <img src="https://img.shields.io/badge/Made%20With-JavaScript-yellow?style=for-the-badge&logo=javascript">
+
+  <img src="https://img.shields.io/badge/Responsive-Yes-success?style=for-the-badge">
+
+</p>
+
+---
+
+# ✨ Features
+
+✅ Basic Arithmetic Operations  
+✅ Responsive Design  
+✅ Modern UI  
+✅ Fast Performance  
+✅ Mobile Friendly  
+✅ Clean Layout  
+✅ Easy to Use  
+
+---
+
+# 🚀 Live Demo
+
+👉 **Click Here:**  
+https://rrr22456789.github.io/Calculator-/
+
+---
+
+# 📸 Preview
+
+<p align="center">
+  <img width="700" src="https://user-images.githubusercontent.com/74038190/212744275-c56a72c2-0b3d-4d00-9c8f-5c4f4a91f7d3.gif">
+</p>
+
+---
+
+# 🛠️ Tech Stack
+
+- HTML5
+- CSS3
+- JavaScript
+
+---
+
+# ⚡ Run Locally
+
+```bash
+git clone https://github.com/rrr22456789/Calculator-.git
 ## 📁 Project Files
 
 | File | Description |
